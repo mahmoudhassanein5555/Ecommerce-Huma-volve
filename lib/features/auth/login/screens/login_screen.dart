@@ -1,4 +1,7 @@
 
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/login_services/login_services.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -18,11 +21,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final LoginServices loginServices;
+  late final ApiClient apiClient;
+  bool isLoading = false;
+
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClient = ApiClient();
+    loginServices = LoginServices(apiClient);
 
     super.initState();
   }
@@ -106,18 +115,68 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
+                  onPressed: () async {
+                    if (!(_formKey.currentState?.validate() ?? false)) {
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
+
+                    try {
+                      await loginServices.login(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
+                      );
+
+                      if (!context.mounted) return;
+
+                      setState(() {
+                        isLoading = false;
+                      });
+
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
+                          builder: (_) => MainNavigationScreen(),
+                        ),
+                      );
+                    } on DioException catch (e) {
+                      if (!context.mounted) return;
+
+                      setState(() {
+                        isLoading = false;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.response?.data?.toString() ??
+                                e.message ??
+                                'Login failed',
+                          ),
+                        ),
+                      );
+                    } catch (_) {
+                      if (!context.mounted) return;
+
+                      setState(() {
+                        isLoading = false;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Something went wrong. Please try again.'),
                         ),
                       );
                     }
                   },
+                  isLoading: isLoading,
                 ),
+
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
