@@ -1,3 +1,7 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network/api_service.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/models/signup_req_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/services/sign_up_services.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -17,13 +21,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  late final SignUpServices signUpServices;
+  late final ApiService apiService;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    apiService = ApiService();
+    signUpServices = SignUpServices(apiService);
     super.initState();
   }
 
@@ -109,13 +117,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 40),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Sign Up',
                   onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
+                    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+                    setState(() => isLoading = true);
+                    try {
+                      await signUpServices.signUp(
+                        SignUpReqModel(
+                          email: emailController.text.trim(),
+                          name: nameController.text.trim(),
+                          password: passwordController.text,
+                        ),
+                      );
+                      if (!mounted) return;
+                      setState(() => isLoading = false);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Sign Up Successful"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    } on DioException catch (e) {
+                      if (!mounted) return;
+                      setState(() => isLoading = false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.response?.data?['message']?.toString() ?? 'Something went wrong',
+                          ),
+                          backgroundColor: Colors.red,
                         ),
                       );
                     }
