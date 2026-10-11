@@ -5,12 +5,12 @@ import '../theme.dart';
 class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  bool isLoading;
+ final  bool isLoading;
   PrimaryButton({
     super.key,
     required this.text,
     required this.onPressed,
-    this.isLoading = false,
+      this.isLoading = false,
   });
 
   @override
