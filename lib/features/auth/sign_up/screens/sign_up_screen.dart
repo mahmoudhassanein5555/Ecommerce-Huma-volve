@@ -1,9 +1,14 @@
+import 'package:dio/dio.dart';
+
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/api_constant.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../service/signup_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,12 +22,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late ApiClient apiClient;
+  late SignupServices signupServices;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClient = ApiClient(ApiConstants.baseUrl);
+    signupServices = SignupServices(apiClient: apiClient);
 
     super.initState();
   }
@@ -110,14 +120,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
+                  isLoading: _isSubmitting,
                   onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
+                    if (_isSubmitting) return;
+
+                    final isValid = _formKey.currentState?.validate() ?? false;
+                    if (!isValid) return;
+
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+
+                    setState(() => _isSubmitting = true);
+
+                    try {
+                      final email = emailController.text.trim();
+                      final password = passwordController.text.trim();
+                      final name = nameController.text.trim();
+
+                      await signupServices.signup(email, password, name);
+
+                      if (!mounted) return;
+
+                      navigator.pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => const LoginScreen(),
                         ),
                       );
+                    } on DioException catch (e) {
+                      if (!mounted) return;
+
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Sign up failed: ${e.message}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                      }
                     }
                   },
                 ),

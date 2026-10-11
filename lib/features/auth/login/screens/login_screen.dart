@@ -1,11 +1,14 @@
-
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/api_constant.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
+import '../service/login_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,11 +21,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final ApiClient apiClient;
+  late final LoginServices loginServices;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClient = ApiClient(ApiConstants.baseUrl);
+    loginServices = LoginServices(apiclient: apiClient);
 
     super.initState();
   }
@@ -108,13 +116,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
+                  isLoading: _isSubmitting,
+                  onPressed: () async {
+                    if (_isSubmitting) return;
+
+                    final isValid = _formKey.currentState?.validate() ?? false;
+                    if (!isValid) return;
+
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+
+                    setState(() => _isSubmitting = true);
+
+                    try {
+                      final email = emailController.text.trim();
+                      final password = passwordController.text.trim();
+
+                      await loginServices.login(email, password);
+
+                      if (!mounted) return;
+
+                      navigator.pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => MainNavigationScreen(),
                         ),
                       );
+                    } on DioException catch (e) {
+                      if (!mounted) return;
+
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text('Login failed: ${e.message}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                      }
                     }
                   },
                 ),
