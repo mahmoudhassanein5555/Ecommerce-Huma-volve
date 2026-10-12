@@ -1,3 +1,7 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/constant/api_constant.dart';
+import 'package:ecommerce_app_huma_volve/core/netWork/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/services/sign_up_services.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -17,12 +21,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late ApiClient apiClient;
+  late SignUpServices signUpServices;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClient = ApiClient(ApiConstants.baseUrl);
+    signUpServices = SignUpServices(apiClient: apiClient);
 
     super.initState();
   }
@@ -112,12 +120,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   text: 'Sign Up',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+                      try {
+                        signUpServices.SingUp(
+                          emailController.text,
+                          passwordController.text,
+                          nameController.text,
+                        );
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      } on DioException catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Sign up failed: ${e.message}'),
+                          ),
+                        );
+                      }
                     }
                   },
                 ),
