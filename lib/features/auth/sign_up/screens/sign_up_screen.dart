@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/services/singup_service.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/networks/api_clints.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../models/singup_req_model.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,13 +21,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late final ApiClints apiClints;
+  late final SingupService singupService;
+  bool isLoading = false;
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    apiClints = ApiClints();
+    singupService = SingupService(apiClints);
     super.initState();
   }
 
@@ -110,14 +117,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
+                  isLoading: isLoading,
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+                      try {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        final response = await singupService.signup(
+                          SingupReqModel(
+                            name: nameController.text.trim(),
+                            email: emailController.text.trim(),
+                            password: passwordController.text.trim(),
+                          ),
+                        );
+                        setState(() {
+                          isLoading = false;
+                        });
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text('Singup Successful! Plz login'),backgroundColor: Colors.green,));
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      } on DioException catch (e) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(e.toString()),backgroundColor: Colors.red,));
+                      }
                     }
                   },
                 ),
