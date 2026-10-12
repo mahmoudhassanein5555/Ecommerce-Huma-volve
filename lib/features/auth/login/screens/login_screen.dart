@@ -1,14 +1,23 @@
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../data/auth_service.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.authService,
+    this.initialEmail,
+    this.infoMessage,
+  });
+
+  final AuthService? authService;
+  final String? initialEmail;
+  final String? infoMessage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -16,15 +25,19 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final AuthService _authService;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
+    super.initState();
+    _authService = widget.authService ?? AuthService.instance;
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
-    super.initState();
+    emailController.text = widget.initialEmail ?? '';
   }
 
   @override
@@ -32,6 +45,38 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false) || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.login(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => MainNavigationScreen(authService: _authService),
+        ),
+      );
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _errorMessage = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _errorMessage = 'Something went wrong. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -62,6 +107,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
+                if (widget.infoMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.infoMessage!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTheme.primary),
+                  ),
+                ],
                 const SizedBox(height: 64),
                 CustomTextField(
                   controller: emailController,
@@ -72,7 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!value.contains('@')) {
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(value.trim())) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -105,18 +159,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: _isLoading,
+                  onPressed: _submitLogin,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -132,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) => const SignUpScreen(),
+                            ) => SignUpScreen(authService: _authService),
                             transitionsBuilder:
                                 (
                                   context,

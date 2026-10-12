@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+
+import '../../auth/data/auth_service.dart';
 import '../../../core/theme.dart';
 import '../../home/screens/home_screen.dart';
 import '../../cart/screens/cart_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  const MainNavigationScreen({super.key, required this.authService});
+
+  final AuthService authService;
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -13,12 +17,17 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+  late final List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const CartScreen(),
-    const ProfileScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      const CartScreen(),
+      ProfileScreen(authService: widget.authService),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

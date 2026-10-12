@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme.dart';
+import 'features/auth/data/auth_service.dart';
 import 'features/splash/screens/splash_screen.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'E-Commerce App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      home: SplashScreen(authService: AuthService.instance),
     );
   }
 }
