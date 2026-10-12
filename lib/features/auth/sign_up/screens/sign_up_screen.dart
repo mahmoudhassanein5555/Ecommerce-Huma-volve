@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/network_service/network_services.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../models/Signup_res_model.dart';
+import '../service/signup_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,14 +21,60 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  late final NetworkServices networkServices;
+  late final SignupService signupService;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    networkServices = NetworkServices();
+    signupService = SignupService(networkServices: networkServices);
 
     super.initState();
+  }
+
+  void signUp() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        await signupService.signup(
+          SignupResModel(
+            name: nameController.text,
+            email: emailController.text,
+            password: passwordController.text,
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text('Account created successfully!'),
+          ),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } on DioException catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${e.toString()} An error occurred. Please try again.',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -109,17 +159,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 40),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: signUp,
                 ),
                 const SizedBox(height: 24),
                 Row(
