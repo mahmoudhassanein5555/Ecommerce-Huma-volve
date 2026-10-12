@@ -4,7 +4,7 @@ import '../theme.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   bool isLoading;
   PrimaryButton({
     super.key,

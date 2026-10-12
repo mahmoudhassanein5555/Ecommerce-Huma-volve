@@ -1,22 +1,14 @@
-import 'package:dio/dio.dart';
+import '../../../core/constants/api_endpoints.dart';
+import '../../../core/network/api_client.dart';
 
 class AuthService {
-  final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: 'https://api.escuelajs.co/api/v1',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    ),
-  );
-
   Future<Map<String, dynamic>> signUp({
     required String name,
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post(
-      '/users',
+    final response = await ApiClient.dio.post(
+      ApiEndpoints.users,
       data: {
         'name': name,
         'email': email,
@@ -32,8 +24,8 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post(
-      '/auth/login',
+    final response = await ApiClient.dio.post(
+      ApiEndpoints.login,
       data: {
         'email': email,
         'password': password,

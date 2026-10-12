@@ -62,17 +62,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Account created successfully! Please log in.',
-          ),
+          content: Text('Account created successfully! Please log in.'),
         ),
       );
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     } on DioException catch (e) {
       if (!mounted) return;
@@ -84,20 +80,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           : null;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            message ?? 'Sign up failed. Please try again.',
-          ),
-        ),
+        SnackBar(content: Text(message ?? 'Sign up failed. Please try again.')),
       );
     } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Something went wrong. Please try again.',
-          ),
+          content: Text('Something went wrong. Please try again.'),
         ),
       );
     } finally {
@@ -123,19 +113,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 const SizedBox(height: 40),
 
-                Icon(
-                  Icons.person_add,
-                  size: 80,
-                  color: AppTheme.primary,
-                ),
+                Icon(Icons.person_add, size: 80, color: AppTheme.primary),
 
                 const SizedBox(height: 32),
 
                 Text(
                   'Create Account',
-                  style: Theme.of(context)
-                      .textTheme
-                      .displayLarge
+                  style: Theme.of(context).textTheme.displayLarge
                       ?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
@@ -144,9 +128,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 Text(
                   'Sign up to get started',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
+                  style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -204,10 +186,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
 
                 PrimaryButton(
-                  text: _isLoading
-                      ? 'Creating Account...'
-                      : 'Sign Up',
-                  onPressed: _isLoading ? null : _signUp,
+                  text: _isLoading ? 'Creating Account...' : 'Sign Up',
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          _signUp();
+                        },
                 ),
 
                 const SizedBox(height: 24),
@@ -225,18 +209,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) =>
-                                const LoginScreen(),
-                            transitionsBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                              child,
-                            ) =>
-                                FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
+                            ) => const LoginScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) => FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
                           ),
                         );
                       },
