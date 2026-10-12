@@ -1,4 +1,6 @@
-
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/services/login_sevice.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -18,11 +20,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late final LoginSevice loginSevice;
+  late final ApiClient apiClient;
+  bool isLoading = false;
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClient = ApiClient();
+    loginSevice = LoginSevice(apiClient);
 
     super.initState();
   }
@@ -107,14 +113,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Login',
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
+                      setState(() {
+                        isLoading = true;
+                      });
+                      try {
+                        final response = await loginSevice.login(
+                          emailController.text.trim(),
+                          passwordController.text.trim(),
+                        );
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => MainNavigationScreen(),
+                          ),
+                        );
+                      } on DioException catch (e) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Login failed: $e')),
+                        );
+                      }
                     }
                   },
                 ),

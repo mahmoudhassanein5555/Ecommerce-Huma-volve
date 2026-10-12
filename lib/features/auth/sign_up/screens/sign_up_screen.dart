@@ -1,3 +1,7 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/models/signup_reqeust_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/services/signup_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -17,9 +21,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late bool isLoading = false;
+ late SignupService signupService;
+ late ApiClient apiClient;
   @override
   void initState() {
+    apiClient = ApiClient();
+    signupService = SignupService(apiClient);
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
@@ -112,12 +120,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   text: 'Sign Up',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+                      isLoading = true;
+                      setState(() {});
+
+                      try {
+                        final requestModel = SignupReqeustModel(
+                          name: nameController.text,
+                          email: emailController.text,
+                          password: passwordController.text,
+                        );
+                        final signUpModel = await signupService.signup(requestModel);
+                        setState(() {
+                          isLoading = false;
+                        });
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      }on DioException catch (e) {
+                        isLoading = false;
+                        setState(() {});
+                        
+                      }
                     }
                   },
                 ),
@@ -136,18 +162,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               animation,
                               secondaryAnimation,
                             ) => const LoginScreen(),
-                            transitionsBuilder:
-                                (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
+                            transitionsBuilder: (
+                              context,
+                              animation,
+                              secondaryAnimation,
+                              child,
+                            ) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                           ),
                         );
                       },

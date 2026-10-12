@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
+// ignore: must_be_immutable
 class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
