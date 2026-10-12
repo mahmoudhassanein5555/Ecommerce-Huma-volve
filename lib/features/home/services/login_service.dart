@@ -1,8 +1,8 @@
 
 import 'package:dio/dio.dart';
 import 'package:ecommerce_app_huma_volve/core/constants/api_client.dart';
-import 'package:ecommerce_app_huma_volve/core/constants/api_endpoints.dart';
-import '../login_model.dart';
+
+import '../models/login_model.dart';
 
 class LoginService {
   final ApiClient apiClient;
@@ -11,7 +11,7 @@ class LoginService {
 
   Future<Response> login(LoginModel loginModel) async {
     return await apiClient.dio.post(
-      ApiEndpoints.login,
+      '/auth/login',
       data: loginModel.toJson(),
     );
   }

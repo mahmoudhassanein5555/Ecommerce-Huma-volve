@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ecommerce_app_huma_volve/core/widgets/custom_text_field.dart';
@@ -8,8 +8,9 @@ import 'package:ecommerce_app_huma_volve/core/widgets/primary_button.dart';
 import 'package:ecommerce_app_huma_volve/core/theme.dart';
 import 'package:ecommerce_app_huma_volve/core/constants/api_client.dart';
 
-import '../models/login_model.dart';
-import '../models/services/login_service.dart';
+import '../../../home/cubit/login_cubit.dart';
+import '../../../home/cubit/login_states.dart';
+import '../../../home/services/login_service.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 
@@ -25,271 +26,229 @@ class _LoginScreenState extends State<LoginScreen> {
 
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
-  bool isLoading = false;
+  late final LoginCubit loginCubit;
 
   @override
   void initState() {
     super.initState();
+
     emailController = TextEditingController();
     passwordController = TextEditingController();
+
+    final apiClient = ApiClient();
+    final loginService = LoginService(apiClient);
+    loginCubit = LoginCubit(loginService);
   }
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    loginCubit.close();
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (isLoading) return;
-
+  void _login() {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final apiClient = ApiClient();
-      final loginService = LoginService(apiClient);
-
-      final loginModel = LoginModel(
-        email: emailController.text.trim(),
-        password: passwordController.text,
-      );
-
-      final response = await loginService.login(loginModel);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
-        final data = response.data;
-
-        if (data is! Map || data['access_token'] == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Login response did not contain an access token.',
-              ),
-            ),
-          );
-          return;
-        }
-
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setString(
-          'access_token',
-          data['access_token'].toString(),
-        );
-
-        if (!mounted) return;
-
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainNavigationScreen(),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Login failed. Check your email and password.',
-            ),
-          ),
-        );
-      }
-    } on DioException catch (e) {
-      if (!mounted) return;
-
-      final data = e.response?.data;
-      final message = data is Map ? data['message'] : null;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            message?.toString() ??
-                'Login failed. Check your email and password.',
-          ),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Something went wrong. Please try again.',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
+    loginCubit.login(
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 60),
+    return BlocProvider.value(
+      value: loginCubit,
+      child: BlocConsumer<LoginCubit, LoginState>(
+        listener: (context, state) async {
+          if (state is LoginSuccess) {
+            final prefs = await SharedPreferences.getInstance();
 
-                Icon(
-                  Icons.shopping_bag,
-                  size: 80,
-                  color: AppTheme.primary,
-                ),
+            await prefs.setString(
+              'access_token',
+              state.accessToken,
+            );
 
-                const SizedBox(height: 32),
+            if (!context.mounted) return;
 
-                Text(
-                  'Welcome Back!',
-                  style: Theme.of(context)
-                      .textTheme
-                      .displayLarge
-                      ?.copyWith(fontSize: 32),
-                  textAlign: TextAlign.center,
-                ),
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => MainNavigationScreen(),
+              ),
+            );
+          }
 
-                const SizedBox(height: 8),
+          if (state is LoginError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state is LoginLoading;
 
-                Text(
-                  'Login to continue your shopping',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
+          return Scaffold(
+            backgroundColor: AppTheme.background,
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 60),
 
-                const SizedBox(height: 64),
+                      Icon(
+                        Icons.shopping_bag,
+                        size: 80,
+                        color: AppTheme.primary,
+                      ),
 
-                CustomTextField(
-                  controller: emailController,
-                  hintText: 'Email Address',
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your email';
-                    }
+                      const SizedBox(height: 32),
 
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
+                      Text(
+                        'Welcome Back!',
+                        style: Theme.of(context)
+                            .textTheme
+                            .displayLarge
+                            ?.copyWith(fontSize: 32),
+                        textAlign: TextAlign.center,
+                      ),
 
-                    return null;
-                  },
-                ),
+                      const SizedBox(height: 8),
 
-                const SizedBox(height: 20),
+                      Text(
+                        'Login to continue your shopping',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
 
-                CustomTextField(
-                  controller: passwordController,
-                  hintText: 'Password',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
+                      const SizedBox(height: 64),
 
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
+                      CustomTextField(
+                        controller: emailController,
+                        hintText: 'Email Address',
+                        prefixIcon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null ||
+                              value.trim().isEmpty) {
+                            return 'Please enter your email';
+                          }
 
-                    return null;
-                  },
-                ),
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
 
-                const SizedBox(height: 16),
+                          return null;
+                        },
+                      ),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                      const SizedBox(height: 20),
 
-                const SizedBox(height: 32),
+                      CustomTextField(
+                        controller: passwordController,
+                        hintText: 'Password',
+                        prefixIcon: Icons.lock_outline,
+                        isPassword: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
 
-                PrimaryButton(
-                  text: isLoading ? 'Logging in...' : 'Login',
-                  onPressed: _login,
-                  isLoading: isLoading,
-                ),
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
 
-                const SizedBox(height: 24),
+                          return null;
+                        },
+                      ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
+                      const SizedBox(height: 16),
 
-                    GestureDetector(
-                      onTap: () {
-                        if (isLoading) return;
-
-                        Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) =>
-                                const SignUpScreen(),
-                            transitionsBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                              child,
-                            ) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              );
-                            },
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
-                        );
-                      },
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 32),
+
+                      PrimaryButton(
+                        text: isLoading
+                            ? 'Logging in...'
+                            : 'Login',
+                        onPressed: isLoading ? () {} : _login,
+                        isLoading: isLoading,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Don't have an account? "),
+
+                          GestureDetector(
+                            onTap: () {
+                              if (isLoading) return;
+
+                              Navigator.pushReplacement(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                  ) =>
+                                      const SignUpScreen(),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: AppTheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 }
-
