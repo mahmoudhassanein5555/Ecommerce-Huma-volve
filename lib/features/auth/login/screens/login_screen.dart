@@ -1,4 +1,5 @@
-
+import 'package:ecommerce_app_huma_volve/core/storage/secureStorageService.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/services/auth_services.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -18,7 +19,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  final AuthService _authService = AuthService();
 
+  bool _isLoading = false;
   @override
   void initState() {
     emailController = TextEditingController();
@@ -34,6 +37,64 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    // بداية التحميل
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authResult = await _authService.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (authResult.isSuccess && authResult.token != null) {
+        // حفظ الـ Token بأمان في SecureStorage
+        await SecureStorageService.writeSecureData(
+          key: SecureStorageService.userTokenKey,
+          value: authResult.token!,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authResult.message ?? 'تم تسجيل الدخول بنجاح!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // TODO: الانتقال إلى الشاشة الرئيسية (Home Screen)
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authResult.message ?? 'حدث خطأ أثناء تسجيل الدخول'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        // إيقاف التحميل
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  ////////////////
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,15 +112,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Welcome Back!',
-                  style: Theme.of(context).textTheme.displayLarge
-                      ?.copyWith(fontSize: 32),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.displayLarge?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Login to continue your shopping',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(fontSize: 16),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 64),
@@ -106,18 +169,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                PrimaryButton(
-                  text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : PrimaryButton(
+                        text: 'Login',
+                        onPressed: () => _handleLogin,
+                      ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -128,11 +185,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const SignUpScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const SignUpScreen(),
                             transitionsBuilder:
                                 (
                                   context,
