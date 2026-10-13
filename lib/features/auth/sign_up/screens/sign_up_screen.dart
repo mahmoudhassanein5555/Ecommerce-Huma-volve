@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../../../core/dummy_data.dart';
+import '../../data/auth_service.dart';
 import '../../login/screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  const SignUpScreen({super.key, this.authService});
+
+  final AuthService? authService;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -14,17 +18,20 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final AuthService _authService;
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
+    super.initState();
+    _authService = widget.authService ?? AuthService.instance;
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
-    super.initState();
   }
 
   @override
@@ -33,6 +40,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitRegistration() async {
+    if (!(_formKey.currentState?.validate() ?? false) || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.register(
+        name: nameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        avatar: dummyUser.profilePictureUrl,
+      );
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LoginScreen(
+            authService: _authService,
+            initialEmail: emailController.text.trim(),
+            infoMessage: 'Account created. Please log in.',
+          ),
+        ),
+      );
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _errorMessage = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _errorMessage = 'Something went wrong. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -85,7 +131,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!value.contains('@')) {
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(value.trim())) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -104,22 +151,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     if (value.length < 6) {
                       return 'Password must be at least 6 characters';
                     }
+                    if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(value)) {
+                      return 'Password must contain only letters and numbers';
+                    }
                     return null;
                   },
                 ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: _isLoading,
+                  onPressed: _submitRegistration,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -135,7 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) => const LoginScreen(),
+                            ) => LoginScreen(authService: _authService),
                             transitionsBuilder:
                                 (
                                   context,

@@ -53,6 +53,16 @@ class ProductCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ColoredBox(
+                              color: AppTheme.background,
+                              child: Center(
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
                       ),
                     ),
                   ),
