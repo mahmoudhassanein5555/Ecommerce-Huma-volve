@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../../core/network/api_client.dart';
 import '../models/auth_tokens.dart';
 import '../models/auth_user.dart';
 
@@ -50,20 +51,7 @@ class AuthException implements Exception {
 
 class AuthService {
   AuthService({Dio? dio, AuthTokenStorage? tokenStorage})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: 'https://api.escuelajs.co/api/v1',
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 15),
-              sendTimeout: const Duration(seconds: 15),
-              headers: const {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-              },
-            ),
-          ),
+    : _dio = dio ?? ApiClient.dio,
       _tokenStorage = tokenStorage ?? SecureAuthTokenStorage();
 
   static final instance = AuthService();

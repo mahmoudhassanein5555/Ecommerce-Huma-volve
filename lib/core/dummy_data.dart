@@ -6,6 +6,7 @@ class Product {
   final String description;
   final double price;
   final String imageUrl;
+  final String category;
   final List<Color> colors;
   final List<String> sizes;
 
@@ -15,9 +16,46 @@ class Product {
     required this.description,
     required this.price,
     required this.imageUrl,
+    this.category = '',
     required this.colors,
     required this.sizes,
   });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final name = json['title'];
+    final description = json['description'];
+    final price = json['price'];
+    final images = json['images'];
+    final categoryJson = json['category'];
+    final category =
+        categoryJson is Map<String, dynamic> ? categoryJson['name'] : null;
+
+    if ((id is! int && id is! String) ||
+        name is! String ||
+        description is! String ||
+        price is! num ||
+        images is! List ||
+        (category != null && category is! String)) {
+      throw const FormatException('The product response is incomplete.');
+    }
+
+    final imageUrl = images
+        .whereType<String>()
+        .map((image) => image.trim())
+        .firstWhere((image) => image.isNotEmpty, orElse: () => '');
+
+    return Product(
+      id: id.toString(),
+      name: name,
+      description: description,
+      price: price.toDouble(),
+      imageUrl: imageUrl,
+      category: category as String? ?? '',
+      colors: const [Colors.white],
+      sizes: const ['One Size'],
+    );
+  }
 }
 
 final dummyProducts = [
