@@ -1,6 +1,5 @@
-
-import '../models/category_model.dart';
-import '../models/product_model.dart';
+import '../domain/entities/category_entity.dart';
+import '../domain/entities/product_entity.dart';
 
 abstract class HomeState {}
 
@@ -9,7 +8,7 @@ class HomeInitial extends HomeState {}
 class CategoriesLoading extends HomeState {}
 
 class CategoriesSuccess extends HomeState {
-  final List<CategoryModel> categories;
+  final List<CategoryEntity> categories;
 
   CategoriesSuccess(this.categories);
 }
@@ -23,7 +22,7 @@ class CategoriesError extends HomeState {
 class ProductsLoading extends HomeState {}
 
 class ProductsSuccess extends HomeState {
-  final List<ProductModel> products;
+  final List<ProductEntity> products;
 
   ProductsSuccess(this.products);
 }

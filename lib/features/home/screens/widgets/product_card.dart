@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce_app_huma_volve/core/theme.dart';
 
-import '../../models/product_model.dart';
+import '../../domain/entities/product_entity.dart';
 
 class ProductCard extends StatelessWidget {
-  final ProductModel product;
+  final ProductEntity product;
 
   const ProductCard({
     super.key,
