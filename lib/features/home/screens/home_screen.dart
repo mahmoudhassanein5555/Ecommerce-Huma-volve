@@ -1,23 +1,41 @@
+import 'package:ecommerce_app_huma_volve/features/home/data/datasources/home_remote_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/repositories/home_repository_impl.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_category_entity.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/repositories/home_repository.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_home_categories_usecase.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_home_products_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme.dart';
+
+import '../widgets/category_chip.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
-import '../models/category_model.dart';
-import '../models/product_model.dart';
-import '../services/home_services.dart';
-import '../widgets/category_chip.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => HomeCubit(HomeServices())..fetchHomeData(),
-      child: const _HomeScreenContent(),
+return BlocProvider(
+  create: (_) {
+    final remoteDataSource = HomeRemoteDataSourceImpl();
+
+    final HomeRepository repository = HomeRepositoryImpl(
+      remoteDataSource,
     );
+
+    return HomeCubit(
+      null,
+      getCategoriesUseCase: GetHomeCategoriesUseCase(repository),
+      getProductsUseCase: GetHomeProductsUseCase(repository),
+    )..fetchHomeData();
+  },
+  child: const _HomeScreenContent(),
+);
   }
 }
 
@@ -80,8 +98,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             if (state is HomeSuccess) {
               return _buildHomeContent(
                 context,
-                state.categories,
-                state.products,
+                state.categories.cast<HomeCategoryEntity>(),
+                state.products.cast<HomeProductEntity>(),
               );
             }
 
@@ -92,11 +110,11 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
     );
   }
 
-  Widget _buildHomeContent(
-    BuildContext context,
-    List<CategoryModel> categories,
-    List<ProductModel> products,
-  ) {
+Widget _buildHomeContent(
+  BuildContext context,
+  List<HomeCategoryEntity> categories,
+  List<HomeProductEntity> products,
+) {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -168,7 +186,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, index) {
                         final category = categories[index];
                         final selectedId =
@@ -221,7 +239,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
 }
 
 class _ApiProductCard extends StatelessWidget {
-  final ProductModel product;
+  final HomeProductEntity product;
 
   const _ApiProductCard({required this.product});
 
@@ -246,7 +264,7 @@ class _ApiProductCard extends StatelessWidget {
                   : Image.network(
                       product.imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) {
+                      errorBuilder: (_, _, _) {
                         return const Center(
                           child: Icon(Icons.broken_image_outlined, size: 40),
                         );

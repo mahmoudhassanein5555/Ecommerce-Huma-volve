@@ -1,3 +1,6 @@
+import 'package:ecommerce_app_huma_volve/features/auth/data/datasources/repositories/auth_repository_impl.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/domain/repositories/auth_repository.dart';
+
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -6,7 +9,8 @@ import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
-import '../../services/auth_service.dart';
+import '../../data/datasources/auth_remote_data_source.dart';
+import '../../domain/usecases/login_usecase.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,8 +25,9 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
 
-  final AuthService _authService = AuthService();
-
+  final LoginUseCase _loginUseCase = LoginUseCase(
+    AuthRepositoryImpl(AuthRemoteDataSourceImpl()) as AuthRepository,
+  );
   bool _isLoading = false;
 
   @override
@@ -49,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.login(
+      await _loginUseCase(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
@@ -57,9 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => MainNavigationScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => MainNavigationScreen()),
       );
     } on DioException catch (e) {
       if (!mounted) return;
@@ -107,26 +110,18 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 60),
-                Icon(
-                  Icons.shopping_bag,
-                  size: 80,
-                  color: AppTheme.primary,
-                ),
+                Icon(Icons.shopping_bag, size: 80, color: AppTheme.primary),
                 const SizedBox(height: 32),
                 Text(
                   'Welcome Back!',
-                  style: Theme.of(context)
-                      .textTheme
-                      .displayLarge
+                  style: Theme.of(context).textTheme.displayLarge
                       ?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Login to continue your shopping',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
+                  style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
@@ -192,18 +187,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) =>
-                                const SignUpScreen(),
-                            transitionsBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                              child,
-                            ) =>
-                                FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
+                            ) => const SignUpScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) => FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
                           ),
                         );
                       },

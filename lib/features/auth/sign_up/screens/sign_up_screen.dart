@@ -1,3 +1,5 @@
+import 'package:ecommerce_app_huma_volve/features/auth/data/datasources/repositories/auth_repository_impl.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/domain/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
@@ -5,7 +7,8 @@ import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
-import '../../services/auth_service.dart';
+import '../../data/datasources/auth_remote_data_source.dart';
+import '../../domain/usecases/signup_usecase.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -21,7 +24,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
 
-  final AuthService _authService = AuthService();
+  final SignupUseCase _signupUseCase = SignupUseCase(
+    AuthRepositoryImpl(AuthRemoteDataSourceImpl()) as AuthRepository,
+  );
 
   bool _isLoading = false;
 
@@ -52,7 +57,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      await _authService.signUp(
+      await _signupUseCase(
         name: nameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text,
