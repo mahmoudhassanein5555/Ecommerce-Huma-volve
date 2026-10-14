@@ -1,9 +1,10 @@
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
-import '../../data/auth_service.dart';
+
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 
@@ -16,31 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool _isLoading = false;
 
-  Future<void> _login() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isLoading = true);
-    try {
-      await authService.login(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-      );
-    } on AuthException catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   @override
   void dispose() {
@@ -123,8 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  isLoading: _isLoading,
-                  onPressed: _login,
+
                 ),
                 const SizedBox(height: 24),
                 Row(
