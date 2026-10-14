@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 import '../widgets/product_card.dart';
@@ -43,27 +44,30 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.menu, color: AppTheme.primary),
+                          child: const Icon(
+                            Icons.menu,
+                            color: AppTheme.primary,
+                          ),
                         ),
                         CircleAvatar(
                           radius: 24,
-                          backgroundImage: NetworkImage(dummyUser.profilePictureUrl),
+                          backgroundImage: NetworkImage(
+                            dummyUser.profilePictureUrl,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 32),
                     Text(
                       'Explore',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 36,
-                      ),
+                      style: Theme.of(context).textTheme.displayLarge
+                          ?.copyWith(fontSize: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Best trendy collection!',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 18,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 32),
                     Container(
@@ -83,14 +87,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration: InputDecoration(
                           hintText: 'Search clothes...',
                           hintStyle: TextStyle(color: Colors.grey.shade400),
-                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.grey,
+                          ),
                           suffixIcon: Container(
                             margin: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: AppTheme.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.tune, color: Colors.white, size: 20),
+                            child: const Icon(
+                              Icons.tune,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                           border: InputBorder.none,
                         ),
@@ -102,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: dummyCategories.length,
-                        separatorBuilder: (context, index) => const SizedBox(width: 12),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 12),
                         itemBuilder: (context, index) {
                           return CategoryChip(
                             label: dummyCategories[index],
@@ -129,12 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                 ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return ProductCard(product: dummyProducts[index]);
-                  },
-                  childCount: dummyProducts.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return ProductCard(product: dummyProducts[index]);
+                }, childCount: dummyProducts.length),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
