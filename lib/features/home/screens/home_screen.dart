@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
-import '../data/home_repository.dart';
+import '../data/datasources/home_remote_data_source.dart';
+import '../data/repositories/home_repository_impl.dart';
+import '../domain/entities/category.dart';
+import '../domain/entities/product.dart';
+import '../domain/failures/home_failure.dart';
+import '../domain/repositories/home_repository.dart';
+import '../domain/usecases/get_home_data.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 
@@ -16,9 +22,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final HomeRepository _repository = widget.repository ?? HomeRepository();
+  late final GetHomeData _getHomeData = GetHomeData(
+    widget.repository ?? HomeRepositoryImpl(DioHomeRemoteDataSource()),
+  );
   List<Product> _products = const [];
-  List<String> _categories = const [];
+  List<Category> _categories = const [];
   String _selectedCategory = 'All';
   String? _errorMessage;
   bool _isLoading = true;
@@ -36,14 +44,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final data = await _repository.fetchHomeData();
+      final data = await _getHomeData();
       if (!mounted) return;
       setState(() {
         _products = data.products;
         _categories = data.categories;
         _selectedCategory = 'All';
       });
-    } on HomeRepositoryException catch (error) {
+    } on HomeFailure catch (error) {
       if (mounted) setState(() => _errorMessage = error.message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -164,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final category = index == 0
                               ? 'All'
-                              : _categories[index - 1];
+                              : _categories[index - 1].name;
                           return CategoryChip(
                             label: category,
                             isSelected: _selectedCategory == category,

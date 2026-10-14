@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:ecommerce_app_huma_volve/features/home/data/home_repository.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/datasources/home_remote_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/repositories/home_repository_impl.dart';
 import 'package:ecommerce_app_huma_volve/features/home/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,12 +15,14 @@ void main() {
   ) async {
     final products = Completer<ResponseBody>();
     final categories = Completer<ResponseBody>();
-    final repository = HomeRepository(
-      dio: createDio((options) {
-        return options.path == '/products'
-            ? products.future
-            : categories.future;
-      }),
+    final repository = HomeRepositoryImpl(
+      DioHomeRemoteDataSource(
+        dio: createDio((options) {
+          return options.path == '/products'
+              ? products.future
+              : categories.future;
+        }),
+      ),
     );
 
     await tester.pumpWidget(
@@ -39,7 +42,11 @@ void main() {
         },
       ]),
     );
-    categories.complete(jsonResponse([{'name': 'Shoes'}]));
+    categories.complete(
+      jsonResponse([
+        {'id': 1, 'name': 'Shoes'},
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Canvas Shoes'), findsOneWidget);
@@ -49,8 +56,10 @@ void main() {
   testWidgets('shows an empty state when the API has no products', (
     tester,
   ) async {
-    final repository = HomeRepository(
-      dio: createDio((options) async => jsonResponse([])),
+    final repository = HomeRepositoryImpl(
+      DioHomeRemoteDataSource(
+        dio: createDio((options) async => jsonResponse([])),
+      ),
     );
 
     await tester.pumpWidget(
@@ -64,25 +73,29 @@ void main() {
 
   testWidgets('shows an error and retries the API request', (tester) async {
     var shouldFail = true;
-    final repository = HomeRepository(
-      dio: createDio((options) async {
-        if (options.path == '/products' && shouldFail) {
-          return jsonResponse({'message': 'Unavailable'}, statusCode: 503);
-        }
-        if (options.path == '/products') {
+    final repository = HomeRepositoryImpl(
+      DioHomeRemoteDataSource(
+        dio: createDio((options) async {
+          if (options.path == '/products' && shouldFail) {
+            return jsonResponse({'message': 'Unavailable'}, statusCode: 503);
+          }
+          if (options.path == '/products') {
+            return jsonResponse([
+              {
+                'id': 4,
+                'title': 'Canvas Shoes',
+                'description': 'Everyday shoes',
+                'price': 49.5,
+                'images': ['https://example.com/shoes.png'],
+                'category': {'name': 'Shoes'},
+              },
+            ]);
+          }
           return jsonResponse([
-            {
-              'id': 4,
-              'title': 'Canvas Shoes',
-              'description': 'Everyday shoes',
-              'price': 49.5,
-              'images': ['https://example.com/shoes.png'],
-              'category': {'name': 'Shoes'},
-            },
+            {'id': 1, 'name': 'Shoes'},
           ]);
-        }
-        return jsonResponse([{'name': 'Shoes'}]);
-      }),
+        }),
+      ),
     );
 
     await tester.pumpWidget(

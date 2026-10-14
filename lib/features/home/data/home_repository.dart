@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/dummy_data.dart';
 import '../../../core/network/api_client.dart';
+import '../domain/entities/product.dart';
 
 class HomeData {
   const HomeData({required this.products, required this.categories});

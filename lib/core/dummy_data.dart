@@ -1,62 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Product {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
-  final String category;
-  final List<Color> colors;
-  final List<String> sizes;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imageUrl,
-    this.category = '',
-    required this.colors,
-    required this.sizes,
-  });
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    final id = json['id'];
-    final name = json['title'];
-    final description = json['description'];
-    final price = json['price'];
-    final images = json['images'];
-    final categoryJson = json['category'];
-    final category =
-        categoryJson is Map<String, dynamic> ? categoryJson['name'] : null;
-
-    if ((id is! int && id is! String) ||
-        name is! String ||
-        description is! String ||
-        price is! num ||
-        images is! List ||
-        (category != null && category is! String)) {
-      throw const FormatException('The product response is incomplete.');
-    }
-
-    final imageUrl = images
-        .whereType<String>()
-        .map((image) => image.trim())
-        .firstWhere((image) => image.isNotEmpty, orElse: () => '');
-
-    return Product(
-      id: id.toString(),
-      name: name,
-      description: description,
-      price: price.toDouble(),
-      imageUrl: imageUrl,
-      category: category as String? ?? '',
-      colors: const [Colors.white],
-      sizes: const ['One Size'],
-    );
-  }
-}
+import '../features/home/domain/entities/product.dart';
 
 final dummyProducts = [
   Product(
@@ -65,7 +9,8 @@ final dummyProducts = [
     description: 'Comfortable and stylish white sneakers for everyday use.',
     price: 59.99,
     imageUrl: 'https://picsum.photos/seed/sneakers/300/300',
-    colors: [Colors.white, Colors.black, Colors.grey],
+    category: 'Shoes',
+    colorHexCodes: ['#FFFFFFFF', '#FF000000', '#FF9E9E9E'],
     sizes: ['40', '41', '42', '43'],
   ),
   Product(
@@ -74,7 +19,8 @@ final dummyProducts = [
     description: 'A classic denim jacket that never goes out of style.',
     price: 89.99,
     imageUrl: 'https://picsum.photos/seed/jacket/300/300',
-    colors: [Colors.blue, Colors.black],
+    category: 'Clothes',
+    colorHexCodes: ['#FF2196F3', '#FF000000'],
     sizes: ['S', 'M', 'L', 'XL'],
   ),
   Product(
@@ -83,7 +29,8 @@ final dummyProducts = [
     description: 'High-quality noise-canceling wireless headphones.',
     price: 199.99,
     imageUrl: 'https://picsum.photos/seed/headphones/300/300',
-    colors: [Colors.black, Colors.grey],
+    category: 'Electronics',
+    colorHexCodes: ['#FF000000', '#FF9E9E9E'],
     sizes: ['One Size'],
   ),
   Product(
@@ -92,7 +39,8 @@ final dummyProducts = [
     description: 'Stay connected and track your fitness with this smart watch.',
     price: 149.99,
     imageUrl: 'https://picsum.photos/seed/watch/300/300',
-    colors: [Colors.black, Colors.blue, Colors.pink],
+    category: 'Electronics',
+    colorHexCodes: ['#FF000000', '#FF2196F3', '#FFE91E63'],
     sizes: ['One Size'],
   ),
 ];
@@ -143,11 +91,3 @@ final dummyUser = UserProfile(
   email: 'john.doe@example.com',
   profilePictureUrl: 'https://picsum.photos/seed/user/150/150',
 );
-
-final dummyCategories = [
-  'All',
-  'Shoes',
-  'Clothing',
-  'Accessories',
-  'Electronics',
-];

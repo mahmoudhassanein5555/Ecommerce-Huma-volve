@@ -2,34 +2,38 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:ecommerce_app_huma_volve/features/home/data/home_repository.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/datasources/home_remote_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/repositories/home_repository_impl.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/failures/home_failure.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('loads and parses products and categories from the API', () async {
     final requestedPaths = <String>[];
-    final repository = HomeRepository(
-      dio: createDio((options) async {
-        requestedPaths.add(options.path);
-        if (options.path == '/products') {
-          return jsonResponse([
-            {
-              'id': 4,
-              'title': 'Canvas Shoes',
-              'description': 'Everyday shoes',
-              'price': 49.5,
-              'images': ['https://example.com/shoes.png'],
-              'category': {'name': 'Shoes'},
-            },
-          ]);
-        }
-        if (options.path == '/categories') {
-          return jsonResponse([
-            {'name': 'Shoes'},
-          ]);
-        }
-        throw StateError('Unexpected request: ${options.path}');
-      }),
+    final repository = HomeRepositoryImpl(
+      DioHomeRemoteDataSource(
+        dio: createDio((options) async {
+          requestedPaths.add(options.path);
+          if (options.path == '/products') {
+            return jsonResponse([
+              {
+                'id': 4,
+                'title': 'Canvas Shoes',
+                'description': 'Everyday shoes',
+                'price': 49.5,
+                'images': ['https://example.com/shoes.png'],
+                'category': {'name': 'Shoes'},
+              },
+            ]);
+          }
+          if (options.path == '/categories') {
+            return jsonResponse([
+              {'id': 1, 'name': 'Shoes'},
+            ]);
+          }
+          throw StateError('Unexpected request: ${options.path}');
+        }),
+      ),
     );
 
     final data = await repository.fetchHomeData();
@@ -38,21 +42,24 @@ void main() {
     expect(data.products.single.name, 'Canvas Shoes');
     expect(data.products.single.category, 'Shoes');
     expect(data.products.single.price, 49.5);
-    expect(data.categories, ['Shoes']);
+    expect(data.categories.map((category) => category.name), ['Shoes']);
   });
 
   test('reports invalid API response shapes explicitly', () async {
-    final repository = HomeRepository(
-      dio: createDio((options) async {
-        if (options.path == '/products') return jsonResponse({'products': []});
-        return jsonResponse([]);
-      }),
+    final repository = HomeRepositoryImpl(
+      DioHomeRemoteDataSource(
+        dio: createDio((options) async {
+          if (options.path == '/products')
+            return jsonResponse({'products': []});
+          return jsonResponse([]);
+        }),
+      ),
     );
 
     await expectLater(
       repository.fetchHomeData(),
       throwsA(
-        isA<HomeRepositoryException>().having(
+        isA<HomeFailure>().having(
           (error) => error.message,
           'message',
           contains('invalid product or category data'),

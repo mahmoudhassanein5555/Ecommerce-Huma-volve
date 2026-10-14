@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../home/domain/entities/product.dart';
 import '../widgets/color_selector.dart';
 import '../widgets/size_selector.dart';
-import '../../../core/widgets/primary_button.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
