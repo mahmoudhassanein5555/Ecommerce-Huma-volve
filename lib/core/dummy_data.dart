@@ -1,24 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Product {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
-  final List<Color> colors;
-  final List<String> sizes;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imageUrl,
-    required this.colors,
-    required this.sizes,
-  });
-}
+import 'models/product.dart';
 
 final dummyProducts = [
   Product(
@@ -105,11 +87,3 @@ final dummyUser = UserProfile(
   email: 'john.doe@example.com',
   profilePictureUrl: 'https://picsum.photos/seed/user/150/150',
 );
-
-final dummyCategories = [
-  'All',
-  'Shoes',
-  'Clothing',
-  'Accessories',
-  'Electronics',
-];
