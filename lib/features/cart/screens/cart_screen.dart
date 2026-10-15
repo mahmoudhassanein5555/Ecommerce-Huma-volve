@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 import '../widgets/cart_item_card.dart';
@@ -9,16 +10,16 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double subtotal = dummyCart.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+    double subtotal = dummyCart.fold(
+      0,
+      (sum, item) => sum + (item.product.price * item.quantity),
+    );
     double tax = subtotal * 0.1;
     double total = subtotal + tax;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('My Cart'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('My Cart'), centerTitle: true),
       body: Column(
         children: [
           Expanded(
@@ -34,7 +35,9 @@ class CartScreen extends StatelessWidget {
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(40),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withValues(alpha: 0.1),
@@ -51,16 +54,40 @@ class CartScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Subtotal:', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
-                      Text('\$${subtotal.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(
+                        'Subtotal:',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        '\$${subtotal.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Tax (10%):', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
-                      Text('\$${tax.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(
+                        'Tax (10%):',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        '\$${tax.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                   const Padding(
@@ -89,13 +116,15 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   PrimaryButton(
-                    text: 'Checkout',
+                    child: Text('Checkout'),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: const Text('Processing Checkout...'),
                           behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           backgroundColor: AppTheme.primary,
                         ),
                       );

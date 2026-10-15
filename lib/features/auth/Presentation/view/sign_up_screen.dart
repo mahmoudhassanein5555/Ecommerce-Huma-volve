@@ -1,9 +1,15 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/constant/api_constant.dart';
+import 'package:ecommerce_app_huma_volve/core/netWork/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/Presentation/view_model/auth_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/Presentation/view_model/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
-import '../../login/screens/login_screen.dart';
+import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -108,19 +114,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
-                PrimaryButton(
-                  text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
+                BlocConsumer<AuthCubit, AuthState>(
+                  builder: (BuildContext context, state) {
+                    return PrimaryButton(
+                      child: (state is SignUpLoadingState)
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : (state is SignUpErrorState)
+                          ? Text(
+                              "Sign Up..",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            )
+                          : Text(
+                              "Sign Up",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+
+                      onPressed: () async {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          context.read<AuthCubit>().SignUp(
+                            name: nameController.text,
+                            email: emailController.text,
+                            password: passwordController.text,
+                          );
+                        }
+                      },
+                    );
+                  },
+                  listener: (BuildContext context, AuthState state) {
+                    if (state is SignUpSuccessState)
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
                       );
-                    }
+                    else if (state is SignUpErrorState)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("${state.errorMessage}")),
+                      );
                   },
                 ),
+
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

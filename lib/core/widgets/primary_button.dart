@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 
 class PrimaryButton extends StatelessWidget {
-  final String text;
+  final Widget child;
   final VoidCallback onPressed;
-  bool isLoading;
-  PrimaryButton({
+  const PrimaryButton({
     super.key,
-    required this.text,
+    required this.child,
     required this.onPressed,
-    this.isLoading = false,
   });
 
   @override
@@ -44,16 +42,7 @@ class PrimaryButton extends StatelessWidget {
           ),
           minimumSize: const Size(double.infinity, 56),
         ),
-        child: isLoading
-            ? CircularProgressIndicator(color: Colors.white)
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
+        child: child,
       ),
     );
   }

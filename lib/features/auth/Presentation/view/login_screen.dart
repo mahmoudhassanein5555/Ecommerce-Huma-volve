@@ -1,11 +1,13 @@
-
+import 'package:ecommerce_app_huma_volve/features/auth/Presentation/view_model/auth_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/Presentation/view_model/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
-import '../../sign_up/screens/sign_up_screen.dart';
+import 'sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -106,16 +108,55 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                PrimaryButton(
-                  text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
+                BlocConsumer<AuthCubit, AuthState>(
+                  buildWhen: (previous, current) =>
+                      current is LoginErrorState ||
+                      current is LoginLoadingState ||
+                      current is LoginSuccessState,
+                  builder: (BuildContext context, state) {
+                    return PrimaryButton(
+                      child: (state is LoginLoadingState)
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : (state is LoginErrorState)
+                          ? Text(
+                              "Login..",
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            )
+                          : Text(
+                              "Login",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+
+                      onPressed: () async {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          context.read<AuthCubit>().Login(
+                            email: emailController.text,
+                            password: passwordController.text,
+                          );
+                        }
+                      },
+                    );
+                  },
+                  listener: (BuildContext context, AuthState state) {
+                    if (state is LoginSuccessState)
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => MainNavigationScreen(),
                         ),
                       );
-                    }
+                    else if (state is LoginErrorState)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("${state.errorMessage}")),
+                      );
                   },
                 ),
                 const SizedBox(height: 24),
@@ -133,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               animation,
                               secondaryAnimation,
                             ) => const SignUpScreen(),
+
                             transitionsBuilder:
                                 (
                                   context,
