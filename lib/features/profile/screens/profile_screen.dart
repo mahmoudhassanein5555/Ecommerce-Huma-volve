@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/dummy_data.dart';
+import '../../../core/storage/secure_storage.dart';
 import '../../../core/theme.dart';
+import '../../auth/presentation/view/login_screen.dart';
 import '../widgets/profile_menu_item.dart';
-import '../../auth/login/screens/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -98,7 +99,8 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.logout,
                     title: 'Logout',
                     isDestructive: true,
-                    onTap: () {
+                    onTap: () async {
+                      await SecureStorage.deleteTokens();
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(
