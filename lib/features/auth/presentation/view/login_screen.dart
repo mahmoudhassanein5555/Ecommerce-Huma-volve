@@ -1,11 +1,17 @@
-
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/data/datasources/signup_datasource_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/data/repositories/signup_repo_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/domain/use_cases/signup_usecase.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/presentation/view_model/cubit/login_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/presentation/view_model/cubit/signup_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
-import '../../sign_up/screens/sign_up_screen.dart';
+import 'sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,12 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  late final ApiClient apiClient;
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    apiClient = ApiClient();
     super.initState();
   }
 
@@ -106,16 +114,70 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                PrimaryButton(
-                  text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
+                BlocConsumer<LoginCubit, AuthState>(
+                  listener: (context, state) {
+                    if (state is LoginLoading) {
+                      isLoading = true;
+                    }
+                    if (state is LoginError) {
+                      isLoading = false;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.errorMessage),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                    if (state is LoginSuccess) {
+                      isLoading = false;
+                      if (!mounted) return;
+
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => MainNavigationScreen(),
                         ),
                       );
                     }
+                  },
+                  builder: (context, state) {
+                    final loginCubit = context.read<LoginCubit>();
+                    return PrimaryButton(
+                      text: 'Login',
+                      isLoading: isLoading,
+                      onPressed: () async {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          loginCubit.login(
+                            emailController.text.trim(),
+                            passwordController.text.trim(),
+                          );
+                          // setState(() => isLoading = true);
+                          // try {
+                          //   final response = await loginService.login(
+                          //     email: emailController.text.trim(),
+                          //     password: passwordController.text.trim(),
+                          //   );
+                          //   debugPrint("Access Token: ${response.accessToken} ");
+                          //   debugPrint("Refresh Token: ${response.refreshToken} ");
+                          //   setState(() => isLoading = false);
+                          //   if (!mounted) return;
+                          //   Navigator.of(context).pushReplacement(
+                          //     MaterialPageRoute(
+                          //       builder: (context) => MainNavigationScreen(),
+                          //     ),
+                          //   );
+                          // } on DioException catch (e) {
+                          //   setState(() => isLoading = false);
+                          //   if (!mounted) return;
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     SnackBar(
+                          //       content: Text(e.toString()),
+                          //       backgroundColor: Colors.red,
+                          //     ),
+                          //   );
+                          // }
+                        }
+                      },
+                    );
                   },
                 ),
                 const SizedBox(height: 24),
@@ -128,11 +190,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const SignUpScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    BlocProvider(
+                                      create: (context) => SignupCubit(
+                                        SignupUsecase(
+                                          SignupRepoImp(
+                                            SignupDatasourceImp(ApiClient()),
+                                          ),
+                                        ),
+                                      ),
+                                      child: const SignUpScreen(),
+                                    ),
                             transitionsBuilder:
                                 (
                                   context,

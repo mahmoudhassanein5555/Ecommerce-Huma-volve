@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 
