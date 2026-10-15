@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/storage/secure_storage.dart';
 import '../../../core/theme.dart';
-import '../../auth/login/screens/login_screen.dart';
+import '../../auth/presentation/view/login_screen.dart';
+import '../../main_navigation/screens/main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,16 +20,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
+    final accessToken = await SecureStorage.getAccessToken();
+    final refreshToken = await SecureStorage.getRefreshToken();
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
-      );
+      if ((accessToken != null && accessToken.isNotEmpty) &&
+          (refreshToken != null && refreshToken.isNotEmpty)) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainNavigationScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+            const LoginScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+      }
     }
   }
 
