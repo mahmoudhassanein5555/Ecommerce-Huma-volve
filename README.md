@@ -1,17 +1,38 @@
-# ecommerce_app_huma_volve
+# Ecommerce Huma-volve
 
-A new Flutter project.
+A Flutter e-commerce demo using the Platzi Fake Store API.
 
-## Getting Started
+## Architecture
 
-This project is a starting point for a Flutter application.
+Auth and Home follow Clean Architecture:
 
-A few resources to get you started if this is your first Flutter project:
+- `domain`: framework-independent entities, repository contracts, and use cases.
+- `data`: API data sources, response models, and repository implementations.
+- `presentation`: screens and Provider-based state management.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+The shared product entity is in `lib/core/domain/entities/product.dart`. API
+response parsing is kept in the Home data layer.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## API
+
+The API base URL is configured in `lib/core/network/api_client.dart`.
+
+- Auth: `POST /auth/login`, `GET /auth/profile`, and `POST /users`.
+- Home: `GET /products` and `GET /categories`.
+
+The access token and signed-in session are held in memory; they are not
+persisted between app launches.
+
+## Run
+
+```shell
+flutter pub get
+flutter run
+```
+
+Run tests and static analysis with:
+
+```shell
+flutter test
+flutter analyze
+```

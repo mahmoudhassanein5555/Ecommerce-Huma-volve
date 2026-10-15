@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../providers/auth_provider.dart';
 import '../../login/screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -37,6 +39,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -108,17 +111,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
+                if (auth.errorMessage != null) ...[
+                  Text(
+                    auth.errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 PrimaryButton(
                   text: 'Sign Up',
+                  isLoading: auth.isLoading,
                   onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
+                    if (!(_formKey.currentState?.validate() ?? false)) return;
+                    final navigator = Navigator.of(context);
+                    final authProvider = context.read<AuthProvider>();
+                    final registered = await authProvider.signUp(
+                      name: nameController.text,
+                      email: emailController.text,
+                      password: passwordController.text,
+                    );
+                    if (!registered) return;
+                    if (!mounted) return;
+                    navigator.pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 24),
