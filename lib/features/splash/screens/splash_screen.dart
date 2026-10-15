@@ -1,6 +1,14 @@
+import 'package:ecommerce_app_huma_volve/core/consts/cached_keys.dart';
+import 'package:ecommerce_app_huma_volve/core/di/get_it.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/domain/use_cases/refresh_token.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/presentation/screens/login_screen.dart';
+import 'package:ecommerce_app_huma_volve/features/main_navigation/screens/main_navigation_screen.dart';
+import 'package:ecommerce_app_huma_volve/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/profile/presentation/cubit/profile_states.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme.dart';
-import '../../auth/login/screens/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,61 +18,122 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _hasRetried = false;
+
   @override
   void initState() {
     super.initState();
-    _navigateToNext();
+    _startFlow();
   }
 
-  Future<void> _navigateToNext() async {
+  Future<void> _startFlow() async {
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
+    if (!mounted) return;
+
+    try {
+      final token = await getIt<FlutterSecureStorage>().read(
+        key: CachedKeys.accessToken,
       );
+
+      if (!mounted) return;
+      if (token == null || token.isEmpty) {
+        _navigateToLogin();
+        return;
+      }
+
+      context.read<ProfileCubit>().fetchProfile();
+    } catch (_) {
+      _navigateToLogin();
     }
+  }
+
+  Future<void> _handleProfileError() async {
+    if (_hasRetried) {
+      _navigateToLogin();
+      return;
+    }
+    _hasRetried = true;
+
+    try {
+      final refreshResult = await getIt<RefreshToken>().call();
+      if (!mounted) return;
+
+      refreshResult.fold(
+        (failure) => _navigateToLogin(),
+        (_) {
+          context.read<ProfileCubit>().fetchProfile();
+        },
+      );
+    } catch (_) {
+      _navigateToLogin();
+    }
+  }
+
+  void _navigateToHome() {
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainNavigationScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
+  }
+
+  void _navigateToLogin() {
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const LoginScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_bag,
-              size: 120,
-              color: AppTheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Huma-volve',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                fontSize: 40,
-                color: AppTheme.primary,
+    return BlocListener<ProfileCubit, ProfileState>(
+      listener: (context, state) {
+        if (state is ProfileSuccess) {
+          _navigateToHome();
+        } else if (state is ProfileError) {
+          _handleProfileError();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.shopping_bag, size: 120, color: AppTheme.primary),
+              const SizedBox(height: 24),
+              Text(
+                'Huma-volve',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  fontSize: 40,
+                  color: AppTheme.primary,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your Ultimate E-Commerce App',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 16,
-                color: Colors.grey.shade600,
+              const SizedBox(height: 8),
+              Text(
+                'Your Ultimate E-Commerce App',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
               ),
-            ),
-            const SizedBox(height: 48),
-            CircularProgressIndicator(
-              color: AppTheme.primary,
-            ),
-          ],
+              const SizedBox(height: 48),
+              CircularProgressIndicator(color: AppTheme.primary),
+            ],
+          ),
         ),
       ),
     );

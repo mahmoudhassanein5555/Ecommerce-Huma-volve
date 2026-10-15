@@ -1,24 +1,5 @@
 import 'package:flutter/material.dart';
-
-class Product {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
-  final List<Color> colors;
-  final List<String> sizes;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imageUrl,
-    required this.colors,
-    required this.sizes,
-  });
-}
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/product.dart';
 
 final dummyProducts = [
   Product(
@@ -26,7 +7,7 @@ final dummyProducts = [
     name: 'Classic White Sneakers',
     description: 'Comfortable and stylish white sneakers for everyday use.',
     price: 59.99,
-    imageUrl: 'https://picsum.photos/seed/sneakers/300/300',
+    images: ['https://picsum.photos/seed/sneakers/300/300'],
     colors: [Colors.white, Colors.black, Colors.grey],
     sizes: ['40', '41', '42', '43'],
   ),
@@ -35,7 +16,7 @@ final dummyProducts = [
     name: 'Denim Jacket',
     description: 'A classic denim jacket that never goes out of style.',
     price: 89.99,
-    imageUrl: 'https://picsum.photos/seed/jacket/300/300',
+    images: ['https://picsum.photos/seed/jacket/300/300'],
     colors: [Colors.blue, Colors.black],
     sizes: ['S', 'M', 'L', 'XL'],
   ),
@@ -44,7 +25,7 @@ final dummyProducts = [
     name: 'Wireless Headphones',
     description: 'High-quality noise-canceling wireless headphones.',
     price: 199.99,
-    imageUrl: 'https://picsum.photos/seed/headphones/300/300',
+    images: ['https://picsum.photos/seed/headphones/300/300'],
     colors: [Colors.black, Colors.grey],
     sizes: ['One Size'],
   ),
@@ -53,7 +34,7 @@ final dummyProducts = [
     name: 'Smart Watch',
     description: 'Stay connected and track your fitness with this smart watch.',
     price: 149.99,
-    imageUrl: 'https://picsum.photos/seed/watch/300/300',
+    images: ['https://picsum.photos/seed/watch/300/300'],
     colors: [Colors.black, Colors.blue, Colors.pink],
     sizes: ['One Size'],
   ),
