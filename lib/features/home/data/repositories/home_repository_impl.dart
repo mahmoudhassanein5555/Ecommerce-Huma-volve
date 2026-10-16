@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../domain/entities/home_data.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/failures/home_failure.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_remote_data_source.dart';
@@ -13,10 +14,18 @@ class HomeRepositoryImpl implements HomeRepository {
   final HomeRemoteDataSource _remoteDataSource;
 
   @override
-  Future<HomeData> fetchHomeData() async {
+  Future<HomeData> fetchHomeData({
+    required int limit,
+    required int offset,
+    String? categoryId,
+  }) async {
     try {
       final results = await Future.wait([
-        _remoteDataSource.fetchProducts(),
+        _remoteDataSource.fetchProducts(
+          limit: limit,
+          offset: offset,
+          categoryId: categoryId,
+        ),
         _remoteDataSource.fetchCategories(),
       ]);
 
@@ -27,6 +36,29 @@ class HomeRepositoryImpl implements HomeRepository {
         products: products.map((item) => item.toEntity()).toList(),
         categories: categories.map((item) => item.toEntity()).toList(),
       );
+    } on DioException catch (error) {
+      throw _mapDioError(error);
+    } on FormatException {
+      throw const HomeFailure(
+        'The server returned invalid product or category data.',
+        HomeFailureKind.invalidResponse,
+      );
+    }
+  }
+
+  @override
+  Future<List<Product>> fetchProducts({
+    required int limit,
+    required int offset,
+    String? categoryId,
+  }) async {
+    try {
+      final products = await _remoteDataSource.fetchProducts(
+        limit: limit,
+        offset: offset,
+        categoryId: categoryId,
+      );
+      return products.map((item) => item.toEntity()).toList();
     } on DioException catch (error) {
       throw _mapDioError(error);
     } on FormatException {

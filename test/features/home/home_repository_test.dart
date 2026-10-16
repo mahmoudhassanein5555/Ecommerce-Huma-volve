@@ -10,10 +10,14 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('loads and parses products and categories from the API', () async {
     final requestedPaths = <String>[];
+    final requestedQueryParameters = <String, dynamic>{};
     final repository = HomeRepositoryImpl(
       DioHomeRemoteDataSource(
         dio: createDio((options) async {
           requestedPaths.add(options.path);
+          if (options.path == '/products') {
+            requestedQueryParameters.addAll(options.queryParameters);
+          }
           if (options.path == '/products') {
             return jsonResponse([
               {
@@ -36,9 +40,10 @@ void main() {
       ),
     );
 
-    final data = await repository.fetchHomeData();
+    final data = await repository.fetchHomeData(limit: 2, offset: 3);
 
     expect(requestedPaths, containsAll(['/products', '/categories']));
+    expect(requestedQueryParameters, {'limit': 2, 'offset': 3});
     expect(data.products.single.name, 'Canvas Shoes');
     expect(data.products.single.category, 'Shoes');
     expect(data.products.single.price, 49.5);
@@ -49,15 +54,16 @@ void main() {
     final repository = HomeRepositoryImpl(
       DioHomeRemoteDataSource(
         dio: createDio((options) async {
-          if (options.path == '/products')
+          if (options.path == '/products') {
             return jsonResponse({'products': []});
+          }
           return jsonResponse([]);
         }),
       ),
     );
 
     await expectLater(
-      repository.fetchHomeData(),
+      repository.fetchHomeData(limit: 20, offset: 0),
       throwsA(
         isA<HomeFailure>().having(
           (error) => error.message,
