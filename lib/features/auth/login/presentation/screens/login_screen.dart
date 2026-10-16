@@ -1,11 +1,21 @@
 
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network%20services/network_services.dart';
+import 'package:ecommerce_app_huma_volve/core/theme.dart';
+import 'package:ecommerce_app_huma_volve/core/widgets/custom_text_field.dart';
+import 'package:ecommerce_app_huma_volve/core/widgets/primary_button.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/presentation/cubit/login_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/datasource/signup_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/datasource/signup_data_source_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/repository/signup_repo_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/domain/repository/signup_repo.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/domain/usecase/signup_use_case.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/presentation/cubit/signup_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/presentation/pages/sign_up_screen.dart';
+import 'package:ecommerce_app_huma_volve/features/main_navigation/screens/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
-
-import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
-import '../../../main_navigation/screens/main_navigation_screen.dart';
-import '../../sign_up/screens/sign_up_screen.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,13 +28,56 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  late final SignupCubit signupCubit;
+  late final SignupDataSource signupDataSource;
+  late final NetworkServices networkServices;
+  late final SignupRepo signupRepo;
+  late final SignupUseCase signupUseCase;
 
   @override
   void initState() {
+    super.initState();
+
     emailController = TextEditingController();
     passwordController = TextEditingController();
 
-    super.initState();
+    networkServices = NetworkServices();
+    signupDataSource = SignupDataSourceImp(networkServices);
+    signupRepo = SignupRepoImp(signupDataSource);
+    signupUseCase = SignupUseCase(signupRepo);
+    signupCubit = SignupCubit(signupUseCase);
+  }
+
+  void login() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        final loginService = context.read<LoginCubit>();
+        await loginService.login(emailController.text, passwordController.text);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+        );
+      } on DioException catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -107,17 +160,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: login,
                 ),
+
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -128,11 +175,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const SignUpScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    BlocProvider(
+                                      create: (context) => signupCubit,
+                                      child: const SignUpScreen(),
+                                    ),
                             transitionsBuilder:
                                 (
                                   context,
