@@ -12,6 +12,10 @@ abstract class HomeRemoteDataSource {
     required int limit,
     required int offset,
   });
+
+  Future<HomeProductModel> getProductById({
+    required int productId,
+  });
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -51,5 +55,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         Map<String, dynamic>.from(item as Map),
       );
     }).toList();
+  }
+
+  @override
+  Future<HomeProductModel> getProductById({
+    required int productId,
+  }) async {
+    final response = await ApiClient.dio.get(
+      '${ApiEndpoints.products}/$productId',
+    );
+
+    return HomeProductModel.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+    );
   }
 }

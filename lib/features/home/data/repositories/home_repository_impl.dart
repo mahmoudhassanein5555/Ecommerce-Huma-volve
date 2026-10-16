@@ -26,4 +26,13 @@ class HomeRepositoryImpl implements HomeRepository {
       offset: offset,
     );
   }
+
+  @override
+  Future<HomeProductEntity> getProductById({
+    required int productId,
+  }) {
+    return remoteDataSource.getProductById(
+      productId: productId,
+    );
+  }
 }

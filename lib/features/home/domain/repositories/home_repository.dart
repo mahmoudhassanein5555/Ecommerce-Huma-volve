@@ -10,4 +10,8 @@ abstract class HomeRepository {
     required int limit,
     required int offset,
   });
+
+  Future<HomeProductEntity> getProductById({
+    required int productId,
+  });
 }

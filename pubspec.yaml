@@ -38,6 +38,9 @@ dependencies:
   dio: ^5.11.1
   pretty_dio_logger: ^1.4.0
   flutter_bloc: ^9.1.1
+  
+  app_links: ^7.2.2
+
 
 dev_dependencies:
   flutter_test:
