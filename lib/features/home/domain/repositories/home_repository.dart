@@ -10,4 +10,6 @@ abstract class HomeRepository {
     int offset = 0,
     int limit = 10,
   });
+
+  Future<ProductEntity> getProductById(int id);
 }

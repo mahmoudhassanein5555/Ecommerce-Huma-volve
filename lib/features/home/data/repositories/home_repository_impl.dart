@@ -50,4 +50,17 @@ class HomeRepositoryImpl implements HomeRepository {
         )
         .toList();
   }
+
+  @override
+  Future<ProductEntity> getProductById(int id) async {
+    final product = await homeService.getProductById(id);
+
+    return ProductEntity(
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      images: product.images,
+    );
+  }
 }
+

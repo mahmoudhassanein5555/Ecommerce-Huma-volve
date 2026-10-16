@@ -1,12 +1,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:ecommerce_app_huma_volve/core/theme.dart';
 
 import '../../home/cubit/home_cubit.dart';
 import '../../home/data/repositories/home_repository_impl.dart';
 import '../../home/domain/usecases/get_categories_usecase.dart';
 import '../../home/domain/usecases/get_products_usecase.dart';
+import '../../home/domain/usecases/get_product_by_id_usecase.dart';
 import '../../home/services/home_service.dart';
 import '../../home/screens/home_screen.dart';
 import '../../cart/screens/cart_screen.dart';
@@ -20,7 +22,8 @@ class MainNavigationScreen extends StatefulWidget {
       _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState
+    extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   late final List<Widget> _screens = [
@@ -40,9 +43,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           homeRepository,
         );
 
+        final getProductByIdUseCase = GetProductByIdUseCase(
+          homeRepository,
+        );
+
         return HomeCubit(
           getCategoriesUseCase: getCategoriesUseCase,
           getProductsUseCase: getProductsUseCase,
+          getProductByIdUseCase: getProductByIdUseCase,
         )..loadHomeData();
       },
       child: const HomeScreen(),

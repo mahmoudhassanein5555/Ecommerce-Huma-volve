@@ -48,4 +48,13 @@ class HomeService {
         )
         .toList();
   }
+  Future<ProductModel> getProductById(int id) async {
+    final response = await dio.get(
+      ApiEndpoints.productDetails(id),
+    );
+
+    return ProductModel.fromJson(
+      Map<String, dynamic>.from(response.data),
+    );
+  }
 }
