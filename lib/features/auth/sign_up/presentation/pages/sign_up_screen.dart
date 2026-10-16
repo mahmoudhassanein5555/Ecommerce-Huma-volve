@@ -1,9 +1,19 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network%20services/network_services.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/data/data_source/;ogin_datasource_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/data/data_source/login_datasource.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/data/repository/login_repo_imp.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/domain/repository/login_repo.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/domain/usecase/login_usecase.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/presentation/cubit/login_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/presentation/screens/login_screen.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/model/signup_req_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/presentation/cubit/signup_cubit.dart';
 import 'package:flutter/material.dart';
-
-import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
-import '../../login/screens/login_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/widgets/custom_text_field.dart';
+import '../../../../../core/widgets/primary_button.dart';
+import '../../../../../core/theme.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,14 +27,73 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  bool isLoading = false;
+  late final LoginCubit loginCubit;
+  late final LoginRepository loginRepo;
+  late final LoginUseCase loginUseCase;
+  late final NetworkServices networkServices;
+  late final LoginDatasource loginDataSource;
 
   @override
   void initState() {
+    super.initState();
+
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
 
-    super.initState();
+    networkServices = NetworkServices();
+    loginDataSource = LoginDataSourceImp(networkServices);
+    loginRepo = LoginRepoImp(loginDataSource);
+    loginUseCase = LoginUseCase(loginRepo);
+    loginCubit = LoginCubit(loginUseCase);
+  }
+
+  void signUp() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        final signupService = context.read<SignupCubit>();
+        await signupService.signup(
+          SignupReqModel(
+            name: nameController.text,
+            email: emailController.text,
+            password: passwordController.text,
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text('Account created successfully!'),
+          ),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BlocProvider<LoginCubit>.value(
+              value: loginCubit,
+              child: const LoginScreen(),
+            ),
+          ),
+        );
+      } on DioException catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${e.toString()} An error occurred. Please try again.',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -109,17 +178,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 40),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: signUp,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -131,11 +192,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const LoginScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    BlocProvider<LoginCubit>.value(
+                                      value: loginCubit,
+                                      child: const LoginScreen(),
+                                    ),
                             transitionsBuilder:
                                 (
                                   context,
