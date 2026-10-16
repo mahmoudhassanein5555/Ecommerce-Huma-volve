@@ -1,3 +1,4 @@
+
 import '../../domain/entities/home_category_entity.dart';
 import '../../domain/entities/home_product_entity.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -9,16 +10,20 @@ class HomeRepositoryImpl implements HomeRepository {
   HomeRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<HomeCategoryEntity>> getCategories() async {
+  Future<List<HomeCategoryEntity>> getCategories() {
     return remoteDataSource.getCategories();
   }
 
   @override
   Future<List<HomeProductEntity>> getProducts({
     required int categoryId,
-  }) async {
+    required int limit,
+    required int offset,
+  }) {
     return remoteDataSource.getProducts(
       categoryId: categoryId,
+      limit: limit,
+      offset: offset,
     );
   }
 }

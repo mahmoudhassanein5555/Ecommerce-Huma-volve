@@ -1,3 +1,4 @@
+
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/home_category_model.dart';
@@ -8,6 +9,8 @@ abstract class HomeRemoteDataSource {
 
   Future<List<HomeProductModel>> getProducts({
     required int categoryId,
+    required int limit,
+    required int offset,
   });
 }
 
@@ -30,9 +33,15 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<HomeProductModel>> getProducts({
     required int categoryId,
+    required int limit,
+    required int offset,
   }) async {
     final response = await ApiClient.dio.get(
       ApiEndpoints.categoryProducts(categoryId),
+      queryParameters: {
+        'limit': limit,
+        'offset': offset,
+      },
     );
 
     final data = response.data as List;

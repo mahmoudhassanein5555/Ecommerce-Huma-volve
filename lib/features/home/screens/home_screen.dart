@@ -1,41 +1,37 @@
-import 'package:ecommerce_app_huma_volve/features/home/data/datasources/home_remote_data_source.dart';
-import 'package:ecommerce_app_huma_volve/features/home/data/repositories/home_repository_impl.dart';
-import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_category_entity.dart';
-import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
-import 'package:ecommerce_app_huma_volve/features/home/domain/repositories/home_repository.dart';
-import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_home_categories_usecase.dart';
-import 'package:ecommerce_app_huma_volve/features/home/domain/usecases/get_home_products_usecase.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme.dart';
-
-import '../widgets/category_chip.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
-
+import '../data/datasources/home_remote_data_source.dart';
+import '../data/repositories/home_repository_impl.dart';
+import '../domain/repositories/home_repository.dart';
+import '../domain/usecases/get_home_categories_usecase.dart';
+import '../domain/usecases/get_home_products_usecase.dart';
+import '../domain/entities/home_category_entity.dart';
+import '../domain/entities/home_product_entity.dart';
+import '../widgets/category_chip.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-return BlocProvider(
-  create: (_) {
-    final remoteDataSource = HomeRemoteDataSourceImpl();
+    return BlocProvider(
+      create: (_) {
+        final remoteDataSource = HomeRemoteDataSourceImpl();
+        final HomeRepository repository =
+            HomeRepositoryImpl(remoteDataSource);
 
-    final HomeRepository repository = HomeRepositoryImpl(
-      remoteDataSource,
+        return HomeCubit(
+          getCategoriesUseCase: GetHomeCategoriesUseCase(repository),
+          getProductsUseCase: GetHomeProductsUseCase(repository),
+        )..fetchHomeData();
+      },
+      child: const _HomeScreenContent(),
     );
-
-    return HomeCubit(
-      null,
-      getCategoriesUseCase: GetHomeCategoriesUseCase(repository),
-      getProductsUseCase: GetHomeProductsUseCase(repository),
-    )..fetchHomeData();
-  },
-  child: const _HomeScreenContent(),
-);
   }
 }
 
@@ -43,11 +39,35 @@ class _HomeScreenContent extends StatefulWidget {
   const _HomeScreenContent();
 
   @override
-  State<_HomeScreenContent> createState() => _HomeScreenContentState();
+  State<_HomeScreenContent> createState() =>
+      _HomeScreenContentState();
 }
 
 class _HomeScreenContentState extends State<_HomeScreenContent> {
-  int? _selectedCategoryId;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+
+    if (position.maxScrollExtent - position.pixels <= 300) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +77,9 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         child: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, state) {
             if (state is HomeLoading || state is HomeInitial) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
 
             if (state is HomeError) {
@@ -81,7 +103,10 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(state.message, textAlign: TextAlign.center),
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
@@ -98,8 +123,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             if (state is HomeSuccess) {
               return _buildHomeContent(
                 context,
-                state.categories.cast<HomeCategoryEntity>(),
-                state.products.cast<HomeProductEntity>(),
+                state,
               );
             }
 
@@ -110,12 +134,15 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
     );
   }
 
-Widget _buildHomeContent(
-  BuildContext context,
-  List<HomeCategoryEntity> categories,
-  List<HomeProductEntity> products,
-) {
+  Widget _buildHomeContent(
+    BuildContext context,
+    HomeSuccess state,
+  ) {
+    final List<HomeCategoryEntity> categories = state.categories;
+    final List<HomeProductEntity> products = state.products;
+
     return CustomScrollView(
+      controller: _scrollController,
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
@@ -139,21 +166,31 @@ Widget _buildHomeContent(
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.menu, color: AppTheme.primary),
+                      child: const Icon(
+                        Icons.menu,
+                        color: AppTheme.primary,
+                      ),
                     ),
-                    const CircleAvatar(radius: 24, child: Icon(Icons.person)),
+                    const CircleAvatar(
+                      radius: 24,
+                      child: Icon(Icons.person),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
                 Text(
                   'Explore',
-                  style: Theme.of(context).textTheme.displayLarge
+                  style: Theme.of(context)
+                      .textTheme
+                      .displayLarge
                       ?.copyWith(fontSize: 36),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Best trendy collection!',
-                  style: Theme.of(context).textTheme.bodyMedium
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
                       ?.copyWith(fontSize: 18),
                 ),
                 const SizedBox(height: 32),
@@ -173,8 +210,13 @@ Widget _buildHomeContent(
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search products...',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.grey,
+                      ),
                       border: InputBorder.none,
                     ),
                   ),
@@ -186,23 +228,19 @@ Widget _buildHomeContent(
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: categories.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: 12),
                       itemBuilder: (context, index) {
                         final category = categories[index];
-                        final selectedId =
-                            _selectedCategoryId ?? categories.first.id;
 
                         return CategoryChip(
                           label: category.name,
-                          isSelected: selectedId == category.id,
+                          isSelected:
+                              state.selectedCategoryId == category.id,
                           onTap: () {
-                            setState(() {
-                              _selectedCategoryId = category.id;
-                            });
-
-                            context.read<HomeCubit>().fetchProductsByCategory(
-                              category.id,
-                            );
+                            context
+                                .read<HomeCubit>()
+                                .fetchProductsByCategory(category.id);
                           },
                         );
                       },
@@ -215,33 +253,80 @@ Widget _buildHomeContent(
         if (products.isEmpty)
           const SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('No products found.')),
+            child: Center(
+              child: Text('No products found.'),
+            ),
           )
         else
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate:
+                  const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.7,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return _ApiProductCard(product: products[index]);
-              }, childCount: products.length),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return _ApiProductCard(
+                    product: products[index],
+                  );
+                },
+                childCount: products.length,
+              ),
             ),
           ),
-        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: _buildPaginationFooter(context, state),
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  Widget _buildPaginationFooter(
+    BuildContext context,
+    HomeSuccess state,
+  ) {
+    if (state.isLoadingMore) {
+      return const CircularProgressIndicator();
+    }
+
+    if (state.loadingMoreError != null) {
+      return Column(
+        children: [
+          const Text('Could not load more products.'),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              context.read<HomeCubit>().retryLoadMore();
+            },
+            child: const Text('Try Again'),
+          ),
+        ],
+      );
+    }
+
+    if (!state.hasMore && state.products.isNotEmpty) {
+      return const Text('You have reached the end.');
+    }
+
+    return const SizedBox.shrink();
   }
 }
 
 class _ApiProductCard extends StatelessWidget {
   final HomeProductEntity product;
 
-  const _ApiProductCard({required this.product});
+  const _ApiProductCard({
+    required this.product,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -259,14 +344,20 @@ class _ApiProductCard extends StatelessWidget {
               width: double.infinity,
               child: product.imageUrl.isEmpty
                   ? const Center(
-                      child: Icon(Icons.image_not_supported_outlined, size: 40),
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 40,
+                      ),
                     )
                   : Image.network(
                       product.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) {
                         return const Center(
-                          child: Icon(Icons.broken_image_outlined, size: 40),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 40,
+                          ),
                         );
                       },
                     ),
