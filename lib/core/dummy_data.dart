@@ -1,32 +1,16 @@
 import 'package:flutter/material.dart';
 
-class Product {
-  final String id;
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
-  final List<Color> colors;
-  final List<String> sizes;
-
-  Product({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imageUrl,
-    required this.colors,
-    required this.sizes,
-  });
-}
+import 'models/product.dart';
 
 final dummyProducts = [
   Product(
     id: '1',
     name: 'Classic White Sneakers',
     description: 'Comfortable and stylish white sneakers for everyday use.',
+    categoryId: '4',
+    category: 'Shoes',
     price: 59.99,
-    imageUrl: 'https://picsum.photos/seed/sneakers/300/300',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
     colors: [Colors.white, Colors.black, Colors.grey],
     sizes: ['40', '41', '42', '43'],
   ),
@@ -34,8 +18,10 @@ final dummyProducts = [
     id: '2',
     name: 'Denim Jacket',
     description: 'A classic denim jacket that never goes out of style.',
+    categoryId: '1',
+    category: 'Clothing',
     price: 89.99,
-    imageUrl: 'https://picsum.photos/seed/jacket/300/300',
+    imageUrl: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80',
     colors: [Colors.blue, Colors.black],
     sizes: ['S', 'M', 'L', 'XL'],
   ),
@@ -43,8 +29,10 @@ final dummyProducts = [
     id: '3',
     name: 'Wireless Headphones',
     description: 'High-quality noise-canceling wireless headphones.',
+    categoryId: '2',
+    category: 'Electronics',
     price: 199.99,
-    imageUrl: 'https://picsum.photos/seed/headphones/300/300',
+    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
     colors: [Colors.black, Colors.grey],
     sizes: ['One Size'],
   ),
@@ -52,8 +40,10 @@ final dummyProducts = [
     id: '4',
     name: 'Smart Watch',
     description: 'Stay connected and track your fitness with this smart watch.',
+    categoryId: '2',
+    category: 'Accessories',
     price: 149.99,
-    imageUrl: 'https://picsum.photos/seed/watch/300/300',
+    imageUrl: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80',
     colors: [Colors.black, Colors.blue, Colors.pink],
     sizes: ['One Size'],
   ),
@@ -103,13 +93,5 @@ class UserProfile {
 final dummyUser = UserProfile(
   name: 'John Doe',
   email: 'john.doe@example.com',
-  profilePictureUrl: 'https://picsum.photos/seed/user/150/150',
+  profilePictureUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
 );
-
-final dummyCategories = [
-  'All',
-  'Shoes',
-  'Clothing',
-  'Accessories',
-  'Electronics',
-];

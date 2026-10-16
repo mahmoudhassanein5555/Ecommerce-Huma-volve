@@ -1,19 +1,75 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/dummy_data.dart';
+import '../../../core/models/product.dart';
+import '../../../core/services/product_api_service.dart';
 import '../../../core/theme.dart';
-import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/product_card.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final ProductApiService? apiService;
+
+  const HomeScreen({super.key, this.apiService});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategoryIndex = 0;
+  late final ProductApiService _apiService =
+      widget.apiService ?? ProductApiService();
+  List<Product> _products = [];
+  String? _selectedCategoryId;
+  Object? _loadError;
+  bool _isLoading = true;
+
+  List<ProductCategory> get _categories {
+    final categories = <String, ProductCategory>{};
+    for (final product in _products) {
+      if (product.categoryId.isNotEmpty) {
+        categories.putIfAbsent(
+          product.categoryId,
+          () => ProductCategory(id: product.categoryId, name: product.category),
+        );
+      }
+    }
+    return categories.values.toList();
+  }
+
+  List<Product> get _visibleProducts => _selectedCategoryId == null
+      ? _products
+      : _products
+            .where((product) => product.categoryId == _selectedCategoryId)
+            .toList();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final products = await _apiService.fetchProducts();
+      if (!mounted) return;
+      setState(() {
+        _products = products;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = error;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         CircleAvatar(
                           radius: 24,
-                          backgroundImage: NetworkImage(
-                            dummyUser.profilePictureUrl,
+                          backgroundColor: Colors.white,
+                          child: ClipOval(
+                            child: Image.network(
+                              dummyUser.profilePictureUrl,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.person_outline),
+                            ),
                           ),
                         ),
                       ],
@@ -112,16 +176,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 44,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
+                        itemCount: _categories.length + 1,
                         separatorBuilder: (context, index) =>
                             const SizedBox(width: 12),
                         itemBuilder: (context, index) {
+                          final isAll = index == 0;
+                          final category = isAll
+                              ? null
+                              : _categories[index - 1];
                           return CategoryChip(
-                            label: dummyCategories[index],
-                            isSelected: _selectedCategoryIndex == index,
+                            label: category?.name ?? 'All',
+                            isSelected: isAll
+                                ? _selectedCategoryId == null
+                                : _selectedCategoryId == category?.id,
                             onTap: () {
                               setState(() {
-                                _selectedCategoryIndex = index;
+                                _selectedCategoryId = category?.id;
                               });
                             },
                           );
@@ -134,17 +204,52 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
-              ),
+              sliver: _isLoading
+                  ? const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(48),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    )
+                  : _loadError != null
+                  ? SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            const Text('Could not load products.'),
+                            const SizedBox(height: 8),
+                            Text(_loadError.toString()),
+                            const SizedBox(height: 12),
+                            FilledButton(
+                              onPressed: _loadProducts,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : _visibleProducts.isEmpty
+                  ? const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 48),
+                        child: Center(
+                          child: Text('No products in this category yet'),
+                        ),
+                      ),
+                    )
+                  : SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.55,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return ProductCard(product: _visibleProducts[index]);
+                      }, childCount: _visibleProducts.length),
+                    ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
