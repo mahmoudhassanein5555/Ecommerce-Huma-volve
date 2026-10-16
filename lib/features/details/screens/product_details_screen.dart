@@ -1,9 +1,9 @@
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/product.dart';
 import 'package:flutter/material.dart';
-import '../../../core/dummy_data.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme.dart';
-import '../widgets/color_selector.dart';
-import '../widgets/size_selector.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../widgets/share_product_button.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
@@ -15,15 +15,15 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  late Color _selectedColor;
-  late String _selectedSize;
+  // late Color _selectedColor;
+  // late String _selectedSize;
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedColor = widget.product.colors.first;
-    _selectedSize = widget.product.sizes.first;
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _selectedColor = widget.product.colors.first;
+  //   _selectedSize = widget.product.sizes.first;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +44,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
                 child: const Icon(Icons.arrow_back_ios_new, size: 16),
               ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => context.pop(),
             ),
             actions: [
+              ShareProductButton(product: widget.product),
+              const SizedBox(width: 8),
               IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
@@ -64,7 +66,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               background: Hero(
                 tag: 'product-${widget.product.id}',
                 child: Image.network(
-                  widget.product.imageUrl,
+                  // widget.product.imageUrl,
+                  widget.product.images.firstWhere(
+                    (image) => image.isNotEmpty,
+                    orElse: () => 'https://via.placeholder.com/300',
+                  ),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -88,20 +94,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.product.name,
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontSize: 28,
-                              height: 1.2,
-                            ),
+                            widget.product.title,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(fontSize: 28, height: 1.2),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Text(
                           '\$${widget.product.price.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppTheme.primary,
-                            fontSize: 24,
-                          ),
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(color: AppTheme.primary, fontSize: 24),
                         ),
                       ],
                     ),
@@ -128,15 +130,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ColorSelector(
-                      colors: widget.product.colors,
-                      selectedColor: _selectedColor,
-                      onColorSelected: (color) {
-                        setState(() {
-                          _selectedColor = color;
-                        });
-                      },
-                    ),
+                    // ColorSelector(
+                    //   colors: widget.product.colors,
+                    //   selectedColor: _selectedColor,
+                    //   onColorSelected: (color) {
+                    //     setState(() {
+                    //       _selectedColor = color;
+                    //     });
+                    //   },
+                    // ),
                     const SizedBox(height: 24),
                     Text(
                       'Select Size',
@@ -145,22 +147,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SizeSelector(
-                      sizes: widget.product.sizes,
-                      selectedSize: _selectedSize,
-                      onSizeSelected: (size) {
-                        setState(() {
-                          _selectedSize = size;
-                        });
-                      },
-                    ),
+                    // SizeSelector(
+                    //   sizes: widget.product.sizes,
+                    //   selectedSize: _selectedSize,
+                    //   onSizeSelected: (size) {
+                    //     setState(() {
+                    //       _selectedSize = size;
+                    //     });
+                    //   },
+                    // ),
                     const SizedBox(height: 32),
                     PrimaryButton(
                       text: 'Add to Cart',
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${widget.product.name} added to cart'),
+                            content: Text(
+                              '${widget.product.title} added to cart',
+                            ),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
