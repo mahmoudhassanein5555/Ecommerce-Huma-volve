@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primary = Color(0xFF1E2022); 
@@ -22,22 +21,20 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: background,
       textTheme: ThemeData.light().textTheme.copyWith(
-        displayLarge: GoogleFonts.playfairDisplay(
+        displayLarge: const TextStyle(
           color: textPrimary,
           fontWeight: FontWeight.w700,
         ),
-        displayMedium: GoogleFonts.playfairDisplay(
+        displayMedium: const TextStyle(
           color: textPrimary,
           fontWeight: FontWeight.w700,
         ),
-        headlineLarge: GoogleFonts.poppins(
+        headlineLarge: const TextStyle(
           color: textPrimary,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: GoogleFonts.poppins(color: textPrimary),
-        bodyMedium: GoogleFonts.poppins(color: textSecondary),
-      ).apply(
-        fontFamily: GoogleFonts.poppins().fontFamily,
+        bodyLarge: const TextStyle(color: textPrimary),
+        bodyMedium: const TextStyle(color: textSecondary),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: background,

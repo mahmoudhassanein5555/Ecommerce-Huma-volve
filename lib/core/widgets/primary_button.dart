@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
+import 'package:ecommerce_app_huma_volve/core/theme.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  bool isLoading;
-  PrimaryButton({
+   final bool isLoading;
+  const PrimaryButton({
     super.key,
     required this.text,
     required this.onPressed,
