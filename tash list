@@ -1,0 +1,9 @@
+ .../data/datasources/home_remote_data_source.dart  |  46 [32m+++[m
+ .../data/repositories/home_repository_impl.dart    |  44 [32m+++[m
+ .../home/domain/repositories/home_repository.dart  |  13 [32m+[m
+ .../home/domain/usecases/get_home_products.dart    |  37 [32m++[m
+ lib/features/home/providers/home_provider.dart     | 176 [32m++++++++++[m
+ lib/features/home/screens/home_screen.dart         | 374 [32m++++++++++++++[m[31m-------[m
+ .../domain/usecases/get_home_products_test.dart    |  49 [32m+++[m
+ test/widget_test.dart                              | 161 [32m++++++++[m[31m-[m
+ 8 files changed, 772 insertions(+), 128 deletions(-)

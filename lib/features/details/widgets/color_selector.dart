@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ColorSelector extends StatelessWidget {
   final List<Color> colors;
-  final Color selectedColor;
+  final Color? selectedColor;
   final ValueChanged<Color> onColorSelected;
 
   const ColorSelector({

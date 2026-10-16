@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class SizeSelector extends StatelessWidget {
   final List<String> sizes;
-  final String selectedSize;
+  final String? selectedSize;
   final ValueChanged<String> onSizeSelected;
 
   const SizeSelector({
