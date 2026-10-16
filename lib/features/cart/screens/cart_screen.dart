@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
+import 'package:ecommerce_app_huma_volve/core/theme.dart';
 import '../widgets/cart_item_card.dart';
 import '../../../core/widgets/primary_button.dart';
 
