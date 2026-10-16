@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/home_state.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 
@@ -22,9 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
+            // Header, search, and categories
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -60,13 +64,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 32),
                     Text(
                       'Explore',
-                      style: Theme.of(context).textTheme.displayLarge
+                      style: Theme.of(context)
+                          .textTheme
+                          .displayLarge
                           ?.copyWith(fontSize: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Best trendy collection!',
-                      style: Theme.of(context).textTheme.bodyMedium
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
                           ?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 32),
@@ -86,7 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: TextField(
                         decoration: InputDecoration(
                           hintText: 'Search clothes...',
-                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                          ),
                           prefixIcon: const Icon(
                             Icons.search,
                             color: Colors.grey,
@@ -132,21 +142,118 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
+
+            // Products section
+            SliverToBoxAdapter(
+              child: BlocBuilder<HomeCubit, HomeState>(
+                builder: (context, state) {
+                  // Loading state
+                  if (state is HomeInitial || state is HomeLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  // Error state
+                  if (state is HomeError) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text('Failed to load products'),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.message,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<HomeCubit>().getProducts();
+                            },
+                            child: const Text('Try Again'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Success state
+                  if (state is HomeSuccess) {
+                    if (state.products.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 60),
+                        child: Center(
+                          child: Text('No products found'),
+                        ),
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: state.products.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemBuilder: (context, index) {
+                          final productEntity = state.products[index];
+
+                          // Convert ProductEntity to Product
+                          final product = Product(
+                            id: productEntity.id,
+                            name: productEntity.name,
+                            description: productEntity.description,
+                            price: productEntity.price,
+                            imageUrl: productEntity.imageUrl,
+                            colors: productEntity.colors.map((color) {
+                              switch (color.toLowerCase()) {
+                                case 'black':
+                                  return Colors.black;
+                                case 'white':
+                                  return Colors.white;
+                                case 'red':
+                                  return Colors.red;
+                                case 'blue':
+                                  return Colors.blue;
+                                case 'green':
+                                  return Colors.green;
+                                default:
+                                  return Colors.black;
+                              }
+                            }).toList(),
+                            sizes: productEntity.sizes,
+                          );
+
+                          return ProductCard(product: product);
+                        },
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 24),
+            ),
           ],
         ),
       ),

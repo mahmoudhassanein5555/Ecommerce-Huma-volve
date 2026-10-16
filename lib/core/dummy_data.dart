@@ -18,7 +18,22 @@ class Product {
     required this.colors,
     required this.sizes,
   });
+
+    factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'].toString(),
+      name: json['title'] ?? '',
+      description: json['description'] ?? '',
+      price: (json['price'] as num).toDouble(),
+     imageUrl: (json['images'] as List).isNotEmpty
+    ? json['images'][0].toString()
+    : '',
+      colors: [Colors.black],
+      sizes: ['One Size'],
+    );
+  }
 }
+
 
 final dummyProducts = [
   Product(
