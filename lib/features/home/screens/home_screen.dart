@@ -1,9 +1,16 @@
-import 'package:flutter/material.dart';
 
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
-import '../widgets/product_card.dart';
-import '../widgets/category_chip.dart';
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../cubit/home_cubit.dart';
+import '../cubit/home_states.dart';
+import '../domain/entities/category_entity.dart';
+import '../domain/entities/product_entity.dart';
+import 'product_details_api_screen.dart';
+import 'widgets/product_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,142 +20,348 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategoryIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+
+  late final AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  bool _isHandlingDeepLink = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(_onScroll);
+
+    _appLinks = AppLinks();
+
+    _handleInitialLink();
+
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      _handleDeepLink,
+    );
+  }
+
+  Future<void> _handleInitialLink() async {
+    try {
+      final uri = await _appLinks.getInitialLink();
+
+      if (uri != null && mounted) {
+        _handleDeepLink(uri);
+      }
+    } catch (e) {
+      debugPrint('Error reading initial link: $e');
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (!mounted || _isHandlingDeepLink) return;
+
+    if (uri.scheme != 'huma-volve' ||
+        uri.host != 'product') {
+      return;
+    }
+
+    if (uri.pathSegments.isEmpty) return;
+
+    final productId = int.tryParse(uri.pathSegments.first);
+
+    if (productId == null || productId <= 0) return;
+
+    _isHandlingDeepLink = true;
+
+    final homeCubit = context.read<HomeCubit>();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: homeCubit,
+          child: ProductDetailsApiScreen(
+            productId: productId,
+          ),
+        ),
+      ),
+    ).then((_) {
+      _isHandlingDeepLink = false;
+    });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
+      appBar: AppBar(
+        title: const Text(
+          'Discover Products',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: false,
+      ),
+      body: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          if (state is HomeInitial ||
+              state is CategoriesLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state is CategoriesError) {
+            return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withValues(alpha: 0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.menu,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundImage: NetworkImage(
-                            dummyUser.profilePictureUrl,
-                          ),
-                        ),
-                      ],
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 12),
                     Text(
-                      'Explore',
-                      style: Theme.of(context).textTheme.displayLarge
-                          ?.copyWith(fontSize: 36),
+                      'Failed to load categories:\n${state.message}',
+                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Best trendy collection!',
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(fontSize: 18),
-                    ),
-                    const SizedBox(height: 32),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.05),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search clothes...',
-                          hintStyle: TextStyle(color: Colors.grey.shade400),
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          suffixIcon: Container(
-                            margin: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.tune,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          return CategoryChip(
-                            label: dummyCategories[index],
-                            isSelected: _selectedCategoryIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedCategoryIndex = index;
-                              });
-                            },
-                          );
-                        },
-                      ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<HomeCubit>().loadHomeData();
+                      },
+                      child: const Text('Try Again'),
                     ),
                   ],
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+            );
+          }
+
+          final categories =
+              context.read<HomeCubit>().categories;
+
+          if (state is ProductsLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state is ProductsError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Failed to load products:\n${state.message}',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<HomeCubit>().loadHomeData();
+                      },
+                      child: const Text('Try Again'),
+                    ),
+                  ],
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
               ),
+            );
+          }
+
+          List<ProductEntity> products = [];
+          bool isLoadingMore = false;
+          bool hasMore = true;
+
+          if (state is ProductsSuccess) {
+            products = state.products;
+            isLoadingMore = state.isLoadingMore;
+            hasMore = state.hasMore;
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              await context.read<HomeCubit>().loadHomeData();
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      12,
+                      16,
+                      8,
+                    ),
+                    child: Text(
+                      'Categories',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 55,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final CategoryEntity category =
+                            categories[index];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            right: 8,
+                          ),
+                          child: ActionChip(
+                            label: Text(category.name),
+                            onPressed: () {
+                              context
+                                  .read<HomeCubit>()
+                                  .getProducts(category.id);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      12,
+                    ),
+                    child: Text(
+                      'Products',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                ),
+
+                if (products.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(
+                        child: Text('No products found'),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = products[index];
+
+                          return ProductCard(
+                            product: product,
+                            onTap: () {
+                              final homeCubit =
+                                  context.read<HomeCubit>();
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      BlocProvider.value(
+                                    value: homeCubit,
+                                    child: ProductDetailsApiScreen(
+                                      productId: product.id,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        childCount: products.length,
+                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.68,
+                      ),
+                    ),
+                  ),
+
+                if (isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+
+                if (!hasMore && products.isNotEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text('No more products'),
+                      ),
+                    ),
+                  ),
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 20),
+                ),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
