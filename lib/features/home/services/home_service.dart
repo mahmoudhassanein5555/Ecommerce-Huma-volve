@@ -16,25 +16,36 @@ class HomeService {
     final List<dynamic> data = response.data;
 
     return data
-        .map((item) => CategoryModel.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
+        .map(
+          (item) => CategoryModel.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
         .toList();
   }
 
-  Future<List<ProductModel>> getProducts(int categoryId) async {
+  Future<List<ProductModel>> getProducts(
+    int categoryId, {
+    int offset = 0,
+    int limit = 10,
+  }) async {
     final response = await dio.get(
       ApiEndpoints.products,
-      queryParameters: {'categoryId': categoryId},
+      queryParameters: {
+        'categoryId': categoryId,
+        'offset': offset,
+        'limit': limit,
+      },
     );
 
     final List<dynamic> data = response.data;
 
     return data
-        .map((item) => ProductModel.fromJson(
-              Map<String, dynamic>.from(item),
-            ))
+        .map(
+          (item) => ProductModel.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
         .toList();
   }
 }
-

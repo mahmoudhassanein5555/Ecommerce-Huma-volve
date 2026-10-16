@@ -1,3 +1,4 @@
+
 import '../domain/entities/category_entity.dart';
 import '../domain/entities/product_entity.dart';
 
@@ -23,8 +24,14 @@ class ProductsLoading extends HomeState {}
 
 class ProductsSuccess extends HomeState {
   final List<ProductEntity> products;
+  final bool isLoadingMore;
+  final bool hasMore;
 
-  ProductsSuccess(this.products);
+  ProductsSuccess(
+    this.products, {
+    this.isLoadingMore = false,
+    this.hasMore = true,
+  });
 }
 
 class ProductsError extends HomeState {

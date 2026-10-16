@@ -21,12 +21,46 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int? _selectedCategoryId;
 
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  
+void _onScroll() {
+  if (!_scrollController.hasClients) return;
+
+  final position = _scrollController.position;
+
+  if (position.pixels >= position.maxScrollExtent - 300) {
+    final state = context.read<HomeCubit>().state;
+
+    if (state is ProductsSuccess &&
+        !state.isLoadingMore &&
+        state.hasMore) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
+  }
+}
+
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -74,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 32),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -93,15 +128,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Categories from API
                     SizedBox(
                       height: 44,
                       child: BlocBuilder<HomeCubit, HomeState>(
                         buildWhen: (previous, current) =>
                             current is CategoriesLoading ||
                             current is CategoriesSuccess ||
-                            current is CategoriesError,
+                            current is CategoriesError ||
+                            current is HomeInitial,
                         builder: (context, state) {
                           if (state is CategoriesLoading ||
                               state is HomeInitial) {
@@ -127,18 +161,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             return ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: categories.length,
-                              separatorBuilder: (_, _) => const SizedBox(width: 12),
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(width: 12),
                               itemBuilder: (context, index) {
                                 final category = categories[index];
 
                                 return CategoryChip(
                                   label: category.name,
                                   isSelected:
-                                      _selectedCategoryId == category.id,
+                                      _selectedCategoryId ==
+                                          category.id,
                                   onTap: () {
                                     setState(() {
-                                      _selectedCategoryId = category.id;
+                                      _selectedCategoryId =
+                                          category.id;
                                     });
+
                                     context
                                         .read<HomeCubit>()
                                         .getProducts(category.id);
@@ -157,14 +195,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // Products from API
             BlocBuilder<HomeCubit, HomeState>(
               buildWhen: (previous, current) =>
                   current is ProductsLoading ||
                   current is ProductsSuccess ||
-                  current is ProductsError,
+                  current is ProductsError ||
+                  current is HomeInitial,
               builder: (context, state) {
-                if (state is ProductsLoading || state is HomeInitial) {
+                if (state is ProductsLoading ||
+                    state is HomeInitial) {
                   return const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(32),
@@ -200,25 +239,45 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
 
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.7,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
+                  return SliverMainAxisGroup(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                        ),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return ProductCard(
+                                product: products[index],
+                              );
+                            },
+                            childCount: products.length,
+                          ),
+                        ),
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return ProductCard(
-                            product: products[index],
-                          );
-                        },
-                        childCount: products.length,
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Center(
+                            child: state.isLoadingMore
+                                ? const CircularProgressIndicator()
+                                : !state.hasMore
+                                    ? const Text(
+                                        'You have reached the end',
+                                      )
+                                    : const SizedBox.shrink(),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   );
                 }
 

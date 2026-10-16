@@ -6,7 +6,15 @@ class GetProductsUseCase {
 
   GetProductsUseCase(this.repository);
 
-  Future<List<ProductEntity>> call(int categoryId) {
-    return repository.getProducts(categoryId);
+  Future<List<ProductEntity>> call(
+    int categoryId, {
+    int offset = 0,
+    int limit = 10,
+  }) {
+    return repository.getProducts(
+      categoryId,
+      offset: offset,
+      limit: limit,
+    );
   }
 }
