@@ -1,4 +1,5 @@
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -6,6 +7,9 @@ import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
+import '../../../../features/auth/login/services/login_services.dart';
+import '../../../../features/auth/login/models/loginModels.dart';
+import '../../../../core/network/api_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,12 +22,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late final ApiClient apiClient;
+late final loginService LoginService;
+bool isLoading=false;
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+LoginService=loginService(apiClient);
     super.initState();
   }
 
@@ -108,15 +114,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
+                  onPressed: ()  async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                      setState(() {
+                        isLoading=true;
+                      });
+                      try {
+                        final response=await LoginService.login(email: emailController.text.trim(),
+                            password: passwordController.text.trim());
+                        setState(() {
+                          isLoading=false;
+                        });
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> MainNavigationScreen(),),);
+                      }
+                    on DioException  catch (e) {setState(() {
+                      isLoading=false;
+                    });
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                    } }
+                    },
                 ),
                 const SizedBox(height: 24),
                 Row(

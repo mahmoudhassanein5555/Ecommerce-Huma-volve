@@ -1,9 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/view/widgets/category_chip.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/view/widgets/product_card.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/viewModel/home_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/viewModel/home_states.dart';
 
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
-import '../widgets/product_card.dart';
-import '../widgets/category_chip.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/dummy_data.dart';
+import '../../../../core/theme.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +20,24 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+late final ScrollController scrollController;
+  @override
+  void initState() {
+    scrollController=ScrollController();
+    scrollController.addListener(_onlisten);
+  context.read<HomeCubit>().LoadHomeDate();
+    super.initState();
+  }
+
+  void _onlisten(){
+final pixels=scrollController.position.pixels;
+final max=scrollController.position.maxScrollExtent;
+final int integarDistance=200;
+if(pixels >= max-integarDistance){
+
+  context.read<HomeCubit>().loadingMoreProducts();
+}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,26 +132,52 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          return CategoryChip(
-                            label: dummyCategories[index],
-                            isSelected: _selectedCategoryIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedCategoryIndex = index;
-                              });
-                            },
-                          );
+
+          BlocBuilder<HomeCubit,HomeStates>(
+            buildWhen: (previous, current) {
+              if(current is ProductsError || current is ProductsIsLoading || current is ProductsSuccess
+               ||current is ProductsisLoadingError || current is ProductsisLoadingMore )
+                {return false ;}
+              return true;
+            }
+            ,
+              builder:
+                  (BuildContext context ,state){
+                if(state is CategoriesIsLoading){
+                  return Center(child: CircularProgressIndicator());
+                }
+                else if (state is CategoriesError){
+                  return Text(state.errorMessage);
+                }
+                else if (state is CategoriesSuccess){
+               final Categories=state.CategoriesModels;
+                  return  SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: Categories.length,
+                    separatorBuilder: (context, index) =>
+                    const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      return CategoryChip(
+                        label: Categories[index].name??"all",
+                        isSelected: _selectedCategoryIndex == index,
+                        onTap: () {
+                          setState(() {
+                            _selectedCategoryIndex = index;
+                          });
                         },
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                );
+                }else {
+                  return SizedBox.shrink();
+                }
+                },
+
+                ),
+
                   ],
                 ),
               ),

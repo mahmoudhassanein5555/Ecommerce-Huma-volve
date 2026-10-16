@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../../../core/network/api_client.dart';
 import '../../login/screens/login_screen.dart';
+import '../../sign_up/services/signUp_services.dart';
+import '../../sign_up/models/signUp_req_models.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,13 +20,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+bool isloading=false;
+late final ApiClient apiClient;
+late final signupServices SignupService;
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    apiClient=ApiClient();
+  SignupService=signupServices(apiClient);
     super.initState();
   }
 
@@ -112,12 +118,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   text: 'Sign Up',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+
+                      final response= await SignupService.signup(SignupReqModels(name: nameController.text.trim(),
+                      email: emailController.text.trim(),
+                      password:  passwordController.text.trim()));
+
+                      // Navigator.pushReplacement(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const LoginScreen(),
+                      //   ),
+                      // );
                     }
                   },
                 ),
