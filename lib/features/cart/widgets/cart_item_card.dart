@@ -33,6 +33,13 @@ class CartItemCard extends StatelessWidget {
               width: 90,
               height: 90,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 90,
+                height: 90,
+                color: AppTheme.background,
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported_outlined),
+              ),
             ),
           ),
           const SizedBox(width: 16),

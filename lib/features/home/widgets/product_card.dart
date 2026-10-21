@@ -53,6 +53,8 @@ class ProductCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const _ImagePlaceholder(),
                       ),
                     ),
                   ),
@@ -128,4 +130,15 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: AppTheme.background,
+    alignment: Alignment.center,
+    child: const Icon(Icons.image_not_supported_outlined, color: AppTheme.textSecondary),
+  );
 }

@@ -51,8 +51,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         CircleAvatar(
                           radius: 24,
-                          backgroundImage: NetworkImage(
-                            dummyUser.profilePictureUrl,
+                          backgroundColor: Colors.white,
+                          child: ClipOval(
+                            child: Image.network(
+                              dummyUser.profilePictureUrl,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.person_outline),
+                            ),
                           ),
                         ),
                       ],
