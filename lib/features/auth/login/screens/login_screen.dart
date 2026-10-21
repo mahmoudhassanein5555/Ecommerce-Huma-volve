@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -19,11 +19,12 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
 
+  bool isLoading = false;
+
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
     super.initState();
   }
 
@@ -107,14 +108,54 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Login',
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
+                      final dio = Dio();
+                      try {
+                        setState(() {
+                          isLoading = true;
+                        });
+
+                        await dio.post(
+                          'https://api.escuelajs.co/api/v1/auth/login',
+                          data: {
+                            "email": emailController.text,
+                            "password": passwordController.text,
+                          },
+                        );
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Login Successful!"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const MainNavigationScreen(),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Invalid email or password"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      }
                     }
                   },
                 ),
@@ -127,24 +168,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
-                          PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const SignUpScreen(),
-                            transitionsBuilder:
-                                (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
+                          MaterialPageRoute(
+                            builder: (context) => const SignUpScreen(),
                           ),
                         );
                       },
