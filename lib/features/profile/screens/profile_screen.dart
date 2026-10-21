@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../auth/views/login_screen.dart';
 import '../widgets/profile_menu_item.dart';
-import '../../auth/login/screens/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    final avatar = (user?.avatar.isNotEmpty ?? false)
+        ? user!.avatar
+        : dummyUser.profilePictureUrl;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -34,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   child: CircleAvatar(
                     radius: 56,
-                    backgroundImage: NetworkImage(dummyUser.profilePictureUrl),
+                    backgroundImage: NetworkImage(avatar),
                   ),
                 ),
                 Container(
@@ -49,7 +57,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              dummyUser.name,
+              user?.name ?? dummyUser.name,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -57,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              dummyUser.email,
+              user?.email ?? dummyUser.email,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
@@ -98,7 +106,9 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.logout,
                     title: 'Logout',
                     isDestructive: true,
-                    onTap: () {
+                    onTap: () async {
+                      await context.read<AuthProvider>().logout();
+                      if (!context.mounted) return;
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(
