@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/Network/api_manager.dart';
+import '../../../../core/theme.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../services/sign_up_services.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,12 +19,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final ApiManager apiManager;
+  late final SignUpServices signUpServices;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiManager = ApiManager();
+    signUpServices = SignUpServices(apiManager);
 
     super.initState();
   }
@@ -52,15 +58,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Create Account',
-                  style: Theme.of(context).textTheme.displayLarge
-                      ?.copyWith(fontSize: 32),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.displayLarge?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Sign up to get started',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(fontSize: 16),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -112,6 +120,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   text: 'Sign Up',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
+                      final response = await signUpServices.signup(
+                        emailController.text,
+                        passwordController.text,
+                        nameController.text,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Sign up successfully"),
+                          backgroundColor: Colors.cyan,
+                        ),
+                      );
+                      print(response.email);
+                      print(response.password);
+                      print(response.name);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -131,23 +153,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const LoginScreen(),
+                            transitionsBuilder: (
                               context,
                               animation,
                               secondaryAnimation,
-                            ) => const LoginScreen(),
-                            transitionsBuilder:
-                                (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
+                              child,
+                            ) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                           ),
                         );
                       },

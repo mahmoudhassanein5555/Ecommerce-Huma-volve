@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/dummy_data.dart';
+
 import '../../../core/theme.dart';
-import '../../details/screens/product_details_screen.dart';
+import '../models/products_model.dart';
 
 class ProductCard extends StatelessWidget {
-  final Product product;
+  final ProductsModel product;
 
   const ProductCard({super.key, required this.product});
 
@@ -12,17 +12,26 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Note: You might need to update ProductDetailsScreen to accept ProductsModel as well
+        /*
         Navigator.push(
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (context, animation, secondaryAnimation) => 
-                ProductDetailsScreen(product: product),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            pageBuilder:
+                (context, animation, secondaryAnimation) =>
+                    ProductDetailsScreen(product: product),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
               return FadeTransition(opacity: animation, child: child);
             },
           ),
         );
+        */
       },
       child: Container(
         decoration: BoxDecoration(
@@ -47,13 +56,23 @@ class ProductCard extends StatelessWidget {
                   Hero(
                     tag: 'product-${product.id}',
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                      child: Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
                       ),
+                      child:
+                          (product.images != null && product.images!.isNotEmpty)
+                              ? Image.network(
+                                product.images![0],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder:
+                                    (context, error, stackTrace) =>
+                                        const Center(child: Icon(Icons.error)),
+                              )
+                              : const Center(
+                                child: Icon(Icons.image_not_supported),
+                              ),
                     ),
                   ),
                   Positioned(
@@ -84,10 +103,10 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      product.name,
+                      product.title ?? "",
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 14,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -98,7 +117,7 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${product.price.toStringAsFixed(2)}',
+                          '\$${product.price?.toStringAsFixed(2) ?? "0.00"}',
                           style: const TextStyle(
                             color: AppTheme.primary,
                             fontWeight: FontWeight.bold,
