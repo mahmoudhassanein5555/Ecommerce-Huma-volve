@@ -5,10 +5,9 @@ plugins {
 }
 
 android {
+    ndkVersion = "26.3.11579264"
     namespace = "com.example.ecommerce_app_huma_volve"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
