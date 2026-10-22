@@ -17,7 +17,9 @@ class Product {
     required this.imageUrl,
     required this.colors,
     required this.sizes,
+    this.categorySlug = '',
   });
+  final String categorySlug;
 }
 
 final dummyProducts = [
