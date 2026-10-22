@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/Network/api_client.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+
+import 'package:flutter/material.dart';
+
+import '../service/sign_upservice.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -13,17 +18,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+
+  bool isLoading = false;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
     super.initState();
   }
 
@@ -35,6 +41,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  Future<void> handleSignUp() async {
+    if (!(formKey.currentState?.validate() ?? false)) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final signUpService = SignUpService(ApiClient());
+
+      final response = await signUpService.signUp(
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (response.token != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response.message ?? 'Sign up successful!')),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } else {
+        throw Exception(response.message ?? 'Failed to sign up');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -52,15 +105,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Create Account',
-                  style: Theme.of(context).textTheme.displayLarge
-                      ?.copyWith(fontSize: 32),
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Sign up to get started',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -68,6 +119,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: nameController,
                   hintText: 'Full Name',
                   prefixIcon: Icons.person_outline,
+
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your full name';
@@ -108,18 +160,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
-                PrimaryButton(
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : PrimaryButton(
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: handleSignUp,
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -127,27 +172,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   children: [
                     const Text('Already have an account? '),
                     GestureDetector(
-                      onTap: () {
+                      onTap: isLoading
+                          ? null
+                          : () {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const LoginScreen(),
-                            transitionsBuilder:
-                                (
-                                  context,
-                                  animation,
-                                  secondaryAnimation,
-                                  child,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: child,
-                                  );
-                                },
+                            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(opacity: animation, child: child);
+                            },
                           ),
                         );
                       },
