@@ -1,26 +1,41 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 import '../../details/screens/product_details_screen.dart';
+import '../models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
-  final Product product;
+  final ProductModel product;
 
   const ProductCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _productImageUrl;
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (context, animation, secondaryAnimation) => 
-                ProductDetailsScreen(product: product),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductDetailsScreen(
+                  product: Product(
+                    id: '1',
+                    name: 'fakjfd',
+                    description: 'description',
+                    price: 20.5,
+                    imageUrl: "https://fkjfk",
+                    colors: [Colors.white],
+                    sizes: ['20'],
+                  ),
+                ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
           ),
         );
       },
@@ -47,13 +62,19 @@ class ProductCard extends StatelessWidget {
                   Hero(
                     tag: 'product-${product.id}',
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                      child: Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
                       ),
+                      child: imageUrl == null
+                          ? _imagePlaceholder()
+                          : Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _imagePlaceholder(),
+                            ),
                     ),
                   ),
                   Positioned(
@@ -84,7 +105,7 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      product.name,
+                      product.title ?? "UnKnown",
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -98,7 +119,7 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${product.price.toStringAsFixed(2)}',
+                          '\$${product.price?.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: AppTheme.primary,
                             fontWeight: FontWeight.bold,
@@ -126,6 +147,27 @@ class ProductCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  String? get _productImageUrl {
+    for (final image in product.images ?? const <String>[]) {
+      final trimmedImage = image.trim();
+      final uri = Uri.tryParse(trimmedImage);
+      if (uri != null &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.host.isNotEmpty) {
+        return trimmedImage;
+      }
+    }
+    return null;
+  }
+
+  Widget _imagePlaceholder() {
+    return Container(
+      color: Colors.grey.shade100,
+      alignment: Alignment.center,
+      child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400),
     );
   }
 }

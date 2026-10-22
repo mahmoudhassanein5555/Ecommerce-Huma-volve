@@ -1,8 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../../main_navigation/screens/main_navigation_screen.dart';
+import '../models/sign_up_request.dart';
+import '../services/sign_up_service.dart';
 import '../../login/screens/login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -17,14 +21,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final SignUpService signUpService;
+  bool isLoading = false;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    signUpService = SignUpService();
 
     super.initState();
+  }
+
+  Future<void> _signUp() async {
+    if (isLoading || !(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => isLoading = true);
+    try {
+      await signUpService.signUp(
+        body: SignUpRequest(
+          name: nameController.text.trim(),
+          email: emailController.text.trim(),
+          password: passwordController.text,
+        ),
+      );
+      if (!mounted) return;
+
+        setState(() {
+          isLoading = false;
+        });
+      Navigator.push(context,MaterialPageRoute(builder: (context) {
+        return MainNavigationScreen();
+      },)
+      );
+    } on DioException catch (error) {
+      setState(() {
+        isLoading = true;
+      });
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${error.message}',
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -110,16 +153,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: isLoading,
+                  onPressed: _signUp,
                 ),
                 const SizedBox(height: 24),
                 Row(

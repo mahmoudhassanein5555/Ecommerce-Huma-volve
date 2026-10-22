@@ -1,4 +1,6 @@
-
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/models/login_request.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/services/login_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -18,12 +20,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
-
+  late LoginService loginService;
+  bool isLoading = false;
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-
+    loginService = LoginService();
     super.initState();
   }
 
@@ -33,7 +36,35 @@ class _LoginScreenState extends State<LoginScreen> {
     passwordController.dispose();
     super.dispose();
   }
-
+    Future<void> _login() async {
+      if (isLoading || !(_formKey.currentState?.validate() ?? false)) return;
+        setState(() {
+          isLoading = true;
+        });
+        try {
+          final response = loginService.login(
+            body: LoginRequest(
+              email: emailController.text,
+              password: passwordController.text,
+            ),
+          );
+          setState(() {
+            isLoading = false;
+          });
+        } on DioException catch (e) {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.message}')),
+          );
+        }
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => MainNavigationScreen(),
+          ),
+        );
+      }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,15 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: isLoading,
+                  onPressed: _login
                 ),
                 const SizedBox(height: 24),
                 Row(
