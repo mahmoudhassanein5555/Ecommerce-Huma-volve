@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../cubit/home_cubit.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 
@@ -112,19 +113,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 44,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
+                        itemCount: categories.length,
                         separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         itemBuilder: (context, index) {
+                          final category = categories[index];
                           return CategoryChip(
-                            label: dummyCategories[index],
+                            label: category.name ?? "all",
                             isSelected: _selectedCategoryIndex == index,
                             onTap: () {
                               setState(() {
                                 _selectedCategoryIndex = index;
                               });
+
+                              context
+                                  .read<HomeCubit>()
+                                  .getProductsByCategoryId(category.id!);
                             },
-                          );
+                          ); // CategoryChip
                         },
                       ),
                     ),
@@ -132,20 +138,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
-              ),
-            ),
+            BlocBuilder<HomeCubit, HomeStates>(
+              builder: (BuildContext context, HomeStates state) {
+                if (state is ProductsLoading) {
+                  return SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  ); // SliverToBoxAdapter
+                } else if (state is ProductsError) {
+                  return SliverToBoxAdapter(
+                    child: Center(child: Text(state.errorMessage)),
+                  ); // SliverToBoxAdapter
+                } else if (state is ProductsSuccess) {
+                  final products = state.products;
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ), // SliverGridDelegateWithFixedCrossAxisCount
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return ProductCard(productModel: products[index]);
+                        },
+                        childCount: products.length,
+                      ), // SliverChildBuilderDelegate
+                    ), // SliverGrid
+                  ); // SliverPadding
+                } else {
+                  return SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+              },
+            ), // BlocBuilder
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
