@@ -1,26 +1,43 @@
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
 import 'package:flutter/material.dart';
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
-import '../../details/screens/product_details_screen.dart';
+
+import '../../../../../core/dummy_data.dart';
+import '../../../../../core/theme.dart';
+import '../../../../details/screens/product_details_screen.dart';
 
 class ProductCard extends StatelessWidget {
-  final Product product;
+  final HomeProductEntity product;
 
   const ProductCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = (product.images != null && product.images!.isNotEmpty)
+        ? product.images!.first
+        : '';
+
     return GestureDetector(
       onTap: () {
+        final displayProduct = Product(
+          id: product.id?.toString() ?? '',
+          name: product.title ?? '',
+          description: product.description ?? '',
+          price: (product.price ?? 0).toDouble(),
+          imageUrl: imageUrl,
+          colors: const [Colors.black, Colors.blue, Colors.grey],
+          sizes: const ['S', 'M', 'L', 'XL'],
+        );
+
         Navigator.push(
           context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (context, animation, secondaryAnimation) => 
-                ProductDetailsScreen(product: product),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductDetailsScreen(product: displayProduct),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
           ),
         );
       },
@@ -47,12 +64,21 @@ class ProductCard extends StatelessWidget {
                   Hero(
                     tag: 'product-${product.id}',
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                       child: Image.network(
-                        product.imageUrl,
+                        imageUrl,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -78,16 +104,16 @@ class ProductCard extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      product.name,
+                      product.title ?? '',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 14,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -98,7 +124,7 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${product.price.toStringAsFixed(2)}',
+                          '\$${(product.price ?? 0).toDouble().toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: AppTheme.primary,
                             fontWeight: FontWeight.bold,

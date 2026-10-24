@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/network/api_manager.dart';
+import '../../../../core/theme.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../model/signup_req_model.dart';
+import '../service/signup_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,12 +21,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final ApiManager apiManager;
+  late final SignupService signupService;
+  bool isLoading = false;
+
+  Future <void> signup() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+      try {
+        setState(() {
+          isLoading = true;
+        });
+        final response = await SignupService(apiManager).signup(
+            SignupReqModel(
+              email: emailController.text.trim(),
+              password: passwordController.text.trim(),
+              name: nameController.text.trim(),
+            )
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(" Signup Success PLZ login"),
+              backgroundColor: Colors.green,)
+        );
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+          ),
+        );
+      } on DioException catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()),
+              backgroundColor: Colors.red,)
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiManager = ApiManager();
+    signupService = SignupService(apiManager);
 
     super.initState();
   }
@@ -110,16 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: signup,
                 ),
                 const SizedBox(height: 24),
                 Row(
