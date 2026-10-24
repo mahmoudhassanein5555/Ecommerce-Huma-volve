@@ -1,9 +1,13 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/models/signup_req_model.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/network/api_manager.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../services/signup_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,6 +21,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final ApiManager apiManager;
+  late final SignupService sigUpService;
+
+Future<void> _onSignup()async{
+    if (_formKey.currentState?.validate() ?? false) {
+
+      try {
+        final response = await sigUpService.signUp(
+          signupReqMod: SignupReqModel(
+            email: emailController.text.trim(),
+            name: nameController.text.trim(),
+            role: "customer",
+            password: passwordController.text
+          ),
+        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Signup Successful Plz Login"),backgroundColor: Colors.green,));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      } on DioException catch (e) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString()),backgroundColor: Colors.red,));
+      }}
+    }
 
   @override
   void initState() {
@@ -24,6 +53,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     emailController = TextEditingController();
     passwordController = TextEditingController();
 
+    apiManager =  ApiManager();
+    sigUpService = SignupService(apiManager);
     super.initState();
   }
 
@@ -110,16 +141,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 40),
                 PrimaryButton(
                   text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: _onSignup
                 ),
                 const SizedBox(height: 24),
                 Row(
