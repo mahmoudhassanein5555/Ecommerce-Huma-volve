@@ -78,7 +78,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               transform: Matrix4.translationValues(0.0, -32.0, 0.0),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.fromLTRB(24.0, 36.0, 24.0, 24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -86,7 +86,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        
                         Expanded(
+                          
                           child: Text(
                             widget.product.name,
                             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -96,6 +98,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ),
                         ),
                         const SizedBox(width: 16),
+                       
                         Text(
                           '\$${widget.product.price.toStringAsFixed(2)}',
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -156,6 +159,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 32),
                     PrimaryButton(
+                      isLoading: false,
                       text: 'Add to Cart',
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(

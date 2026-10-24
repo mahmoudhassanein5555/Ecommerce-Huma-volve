@@ -1,26 +1,33 @@
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/model/user_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/view/login/services/login_service.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
-import '../../login/screens/login_screen.dart';
+import '../../../../../core/widgets/custom_text_field.dart';
+import '../../../../../core/widgets/primary_button.dart';
+import '../../../../../core/theme.dart';
+import '../../../../main_navigation/screens/main_navigation_screen.dart';
+import '../../sign_up/screens/sign_up_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late LoginService loginService;
+  late ApiClient apiClient;
+  bool isLoading = false;
 
   @override
   void initState() {
-    nameController = TextEditingController();
+    apiClient = ApiClient();
+    loginService = LoginService(apiClient);
     emailController = TextEditingController();
     passwordController = TextEditingController();
 
@@ -29,7 +36,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -47,35 +53,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
-                Icon(Icons.person_add, size: 80, color: AppTheme.primary),
+                const SizedBox(height: 60),
+                Icon(Icons.shopping_bag, size: 80, color: AppTheme.primary),
                 const SizedBox(height: 32),
                 Text(
-                  'Create Account',
+                  'Welcome Back!',
                   style: Theme.of(context).textTheme.displayLarge
                       ?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign up to get started',
+                  'Login to continue your shopping',
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
-                CustomTextField(
-                  controller: nameController,
-                  hintText: 'Full Name',
-                  prefixIcon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 64),
                 CustomTextField(
                   controller: emailController,
                   hintText: 'Email Address',
@@ -107,17 +101,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
                 PrimaryButton(
-                  text: 'Sign Up',
+                  isLoading: isLoading,
+                  text: 'Login',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
+                      setState(() {
+                        isLoading = true;
+                      });
+                      try {
+                        await loginService.login(
+                          UserModel(
+                            password: passwordController.text,
+                            email: emailController.text,
+                          ),
+                        );
+                      
+                          setState(() {
+                            isLoading = false;
+                          });
+                      
+                        // ignore: use_build_context_synchronously
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => MainNavigationScreen(),
+                          ),
+                        );
+                      } catch (e) {
+                        setState(() {
+                            isLoading = false;
+                          });
+                        if (!mounted) return;
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              e.toString().replaceAll("Exception: ", ""),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   },
                 ),
@@ -125,7 +161,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account? '),
+                    const Text('Don\'t have an account? '),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
@@ -135,7 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) => const LoginScreen(),
+                            ) => const SignUpScreen(),
                             transitionsBuilder:
                                 (
                                   context,
@@ -152,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         );
                       },
                       child: Text(
-                        'Login',
+                        'Sign Up',
                         style: TextStyle(
                           color: AppTheme.primary,
                           fontWeight: FontWeight.bold,

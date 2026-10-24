@@ -89,6 +89,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   PrimaryButton(
+                    isLoading: false,
                     text: 'Checkout',
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(

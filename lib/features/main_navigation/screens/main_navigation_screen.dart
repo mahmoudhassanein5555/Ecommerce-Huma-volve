@@ -1,6 +1,10 @@
+import 'package:ecommerce_app_huma_volve/core/network/api_client.dart';
+import 'package:ecommerce_app_huma_volve/features/home/service/home_service.dart';
+import 'package:ecommerce_app_huma_volve/features/home/view_model/cubit/home_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme.dart';
-import '../../home/screens/home_screen.dart';
+import '../../home/view/screens/home_screen.dart';
 import '../../cart/screens/cart_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
@@ -15,7 +19,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    BlocProvider(
+      create: (context) => HomeCubit(HomeService(ApiClient()))
+        ..getCategories()
+        ..getProducts(),
+      child: const HomeScreen(),
+    ),
     const CartScreen(),
     const ProfileScreen(),
   ];

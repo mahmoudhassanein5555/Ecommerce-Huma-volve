@@ -1,26 +1,26 @@
-
 import 'package:flutter/material.dart';
 
-import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
-import '../../../main_navigation/screens/main_navigation_screen.dart';
-import '../../sign_up/screens/sign_up_screen.dart';
+import '../../../../../../core/widgets/custom_text_field.dart';
+import '../../../../../../core/widgets/primary_button.dart';
+import '../../../../../../core/theme.dart';
+import '../../screens/login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
 
   @override
   void initState() {
+    nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
 
@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -46,23 +47,35 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
-                Icon(Icons.shopping_bag, size: 80, color: AppTheme.primary),
+                const SizedBox(height: 40),
+                Icon(Icons.person_add, size: 80, color: AppTheme.primary),
                 const SizedBox(height: 32),
                 Text(
-                  'Welcome Back!',
+                  'Create Account',
                   style: Theme.of(context).textTheme.displayLarge
                       ?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Login to continue your shopping',
+                  'Sign up to get started',
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 64),
+                const SizedBox(height: 48),
+                CustomTextField(
+                  controller: nameController,
+                  hintText: 'Full Name',
+                  prefixIcon: Icons.person_outline,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your full name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
                 CustomTextField(
                   controller: emailController,
                   hintText: 'Email Address',
@@ -94,25 +107,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
                 PrimaryButton(
-                  text: 'Login',
-                  onPressed: () {
+                  isLoading: false,
+                  text: 'Sign Up',
+                  onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
+                      Navigator.pushReplacement(
+                        context,
                         MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
+                          builder: (context) => const LoginScreen(),
                         ),
                       );
                     }
@@ -122,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Don\'t have an account? '),
+                    const Text('Already have an account? '),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
@@ -132,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               animation,
                               secondaryAnimation,
-                            ) => const SignUpScreen(),
+                            ) => const LoginScreen(),
                             transitionsBuilder:
                                 (
                                   context,
@@ -149,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: Text(
-                        'Sign Up',
+                        'Login',
                         style: TextStyle(
                           color: AppTheme.primary,
                           fontWeight: FontWeight.bold,
