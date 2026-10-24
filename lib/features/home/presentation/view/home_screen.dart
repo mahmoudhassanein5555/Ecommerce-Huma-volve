@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/dummy_data.dart';
-import '../../../core/theme.dart';
-import '../cubit/home_cubit.dart';
-import '../cubit/home_states.dart';
-import '../widgets/category_chip.dart';
-import '../widgets/product_card.dart';
+import '../../../../core/dummy_data.dart';
+import '../../../../core/theme.dart';
+import '../../widgets/category_chip.dart';
+import '../../widgets/product_card.dart';
+import '../view_model/home_cubit.dart';
+import '../view_model/home_states.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
