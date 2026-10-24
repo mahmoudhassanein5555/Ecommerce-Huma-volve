@@ -77,11 +77,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
               transform: Matrix4.translationValues(0.0, -32.0, 0.0),
+
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,

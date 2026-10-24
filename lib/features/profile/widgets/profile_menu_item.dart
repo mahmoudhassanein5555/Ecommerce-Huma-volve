@@ -22,7 +22,6 @@ class ProfileMenuItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -33,27 +32,31 @@ class ProfileMenuItem extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color),
           ),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-            color: isDestructive ? AppTheme.error : AppTheme.textPrimary,
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: isDestructive ? AppTheme.error : AppTheme.textPrimary,
+            ),
           ),
+          trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+          onTap: onTap,
         ),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

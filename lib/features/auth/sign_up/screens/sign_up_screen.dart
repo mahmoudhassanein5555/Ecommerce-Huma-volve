@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/network/api_clint.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../login/screens/login_screen.dart';
+import '../services/signup_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,12 +20,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final ApiClint apiClint;
+  late final SignupService signupService;
+  bool isLoading = false;
 
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiClint = ApiClint();
+    signupService = SignupService(apiClint);
 
     super.initState();
   }
@@ -32,6 +40,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+
     super.dispose();
   }
 
@@ -52,15 +61,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Create Account',
-                  style: Theme.of(context).textTheme.displayLarge
-                      ?.copyWith(fontSize: 32),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.displayLarge?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Sign up to get started',
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(fontSize: 16),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -108,19 +119,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
-                PrimaryButton(
-                  text: 'Sign Up',
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : PrimaryButton(
+                        text: 'Sign Up',
+                        onPressed: () async {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            try {
+                              final response = await signupService.signUp(
+                                email: emailController.text.trim(),
+                                name: nameController.text.trim(),
+                                password: passwordController.text.trim(),
+                              );
+                              print('Response ${response}');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Email Created successfully'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                              setState(() {
+                                isLoading = false;
+                              });
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            } on DioException catch (e) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.message.toString())),
+                              );
+                            }
+                          }
+                        },
+                      ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -131,11 +172,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const LoginScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const LoginScreen(),
                             transitionsBuilder:
                                 (
                                   context,
