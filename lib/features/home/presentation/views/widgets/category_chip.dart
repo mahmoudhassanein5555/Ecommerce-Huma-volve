@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme.dart';
+
+import '../../../../../core/theme.dart';
 
 class CategoryChip extends StatelessWidget {
   final String label;
@@ -43,7 +44,7 @@ class CategoryChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppTheme.textSecondary,
+            color: isSelected ? AppTheme.surface : AppTheme.textSecondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),

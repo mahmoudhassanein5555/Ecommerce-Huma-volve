@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'core/di/service_locator.dart';
 import 'core/theme.dart';
 import 'features/splash/screens/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
+   WidgetsFlutterBinding.ensureInitialized();
+ await  setupServiceLocator();
   runApp(const MyApp());
 }
 
