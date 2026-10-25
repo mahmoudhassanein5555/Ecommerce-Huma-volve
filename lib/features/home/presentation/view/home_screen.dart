@@ -17,10 +17,30 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+  late final ScrollController scrollController;
+
   @override
   void initState() {
+    scrollController = ScrollController();
+    scrollController.addListener(onListen);
     context.read<HomeCubit>().loadHomeData();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  void onListen() {
+    final pixels = scrollController.position.pixels;
+    final max = scrollController.position.maxScrollExtent;
+    final int triggerDistance = 200;
+
+    if (pixels >= max - triggerDistance) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
   }
 
   @override
@@ -29,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -169,7 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
               buildWhen: (previous, current) {
                 return current is ProductsLoading ||
                     current is ProductsSuccess ||
-                    current is ProductsError;
+                    current is ProductsError ||
+                    current is ProductsLoadMore ||
+                    current is ProductsLoadMoreError;
               },
               builder: (context, state) {
                 if (state is ProductsLoading) {
@@ -185,7 +208,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   return SliverToBoxAdapter(
                     child: Center(child: Text(state.error)),
                   );
-                } else if (state is ProductsSuccess) {
+                } else {
+                  final products = context.read<HomeCubit>().products;
+                  if (products.isEmpty) {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
                   return SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverGrid(
@@ -197,8 +224,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSpacing: 16,
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: state.products[index]);
-                      }, childCount: state.products.length),
+                        return ProductCard(product: products[index]);
+                      }, childCount: products.length),
+                    ),
+                  );
+                }
+              },
+            ),
+            BlocBuilder<HomeCubit, HomeStates>(
+              builder: (context, state) {
+                if (state is ProductsLoadMore) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   );
                 }

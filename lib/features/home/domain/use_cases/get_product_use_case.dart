@@ -5,8 +5,11 @@ class GetProductsUseCase {
   final HomeRepository homeRepository;
   GetProductsUseCase(this.homeRepository);
 
-  Future<List<HomeProductEntity>> invoke(num? categoryId) =>
-      homeRepository.getProducts(categoryId);
+  Future<List<HomeProductEntity>> invoke(
+    num? categoryId, {
+    required int? limit,
+    required int? offset,
+  }) => homeRepository.getProducts(categoryId, limit: limit, offset: offset);
 
   late final products = homeRepository.getProducts;
 }
