@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huma Volve - فتح المنتج</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            text-align: center;
+            padding-top: 80px;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            max-width: 400px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #333;
+            font-size: 22px;
+        }
+        p {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 25px;
+    }
+
+    .btn {
+        display: inline-block;
+        background-color: #4f46e5;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 15px;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    <h2>جاري تحويلك إلى التطبيق...</h2>
+    <p id="info-text">إذا لم يفتح التطبيق تلقائيًا، اضغط على الزر أدناه.</p>
+    <a id="open-app-btn" href="#" class="btn">افتح التطبيق Huma Volve</a>
+</div>
+
+<script>
+    const match = window.location.pathname.match(/\/products\/([^\/]+)/);
+    const productId = match ? match[1] : '';
+
+    if (productId) {
+        // Custom Scheme الخاص بتطبيقك
+        const customSchemeUrl = `humavolve://app/products/${productId}`;
+
+        // Fallback تحديث زر الـ
+        document.getElementById('open-app-btn').href = customSchemeUrl;
+        document.getElementById('info-text').innerText = `رقم المنتج المطلوب: ${productId}`;
+
+        window.location.href = customSchemeUrl;
+    } else {
+        document.querySelector('.container').innerHTML = '<h2>عذراً، الرابط غير صحيح</h2>';
+    }
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+import 'package:ecommerce_app_huma_volve/core/storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
@@ -98,7 +99,8 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.logout,
                     title: 'Logout',
                     isDestructive: true,
-                    onTap: () {
+                    onTap: () async{
+                      await SecureStorage.deleteTokens();
                       Navigator.pushReplacement(
                         context,
                         PageRouteBuilder(
