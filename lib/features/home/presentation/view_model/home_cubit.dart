@@ -1,9 +1,9 @@
 import 'package:ecommerce_app_huma_volve/features/home/domain/use_cases/get_product_use_case.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/home_product_entity.dart';
-import '../../domain/use_cases/get_categories_use_case.dart';
-import 'home_states.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/use_cases/get_categories_use_case.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/view_model/home_states.dart';
 
 class HomeCubit extends Cubit<HomeStates> {
   final GetCategoriesUseCase getCategoriesUseCase;
@@ -55,10 +55,6 @@ class HomeCubit extends Cubit<HomeStates> {
     } catch (e) {
       emit(ProductsError(e.toString()));
     }
-  }
-
-  void getProductsByCategoryId(int id) async {
-    fetchProducts(id);
   }
 
   Future<void> loadMoreProducts() async {

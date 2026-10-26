@@ -1,5 +1,6 @@
 import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme.dart';
 
@@ -12,26 +13,7 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Note: You might need to update ProductDetailsScreen to accept ProductsModel as well
-        /*
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder:
-                (context, animation, secondaryAnimation) =>
-                    ProductDetailsScreen(product: product),
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-          ),
-        );
-        */
+        context.push('/products/${product.id}', extra: product);
       },
       child: Container(
         decoration: BoxDecoration(

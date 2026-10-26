@@ -1,7 +1,7 @@
-import '../../domain/entities/home_category_entity.dart';
-import '../../domain/entities/home_product_entity.dart';
-import '../../domain/repository/home_repository.dart';
-import '../data/home_remote_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_category_entity.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/entities/home_product_entity.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/repository/home_repository.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/data/home_remote_data_source.dart';
 
 class HomeRepositoryImp implements HomeRepository {
   final HomeRemoteDataSource homeRemoteDataSource;
