@@ -1,3 +1,5 @@
+import 'package:ecommerce_app_huma_volve/core/storage/secure_storage.dart';
+import 'package:ecommerce_app_huma_volve/features/main_navigation/screens/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../../auth/login/screens/login_screen.dart';
@@ -18,17 +20,24 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
+    final accessToken = await SecureStorage.getAccesstoken();
+        final refreshToken = await SecureStorage.getrefreshtoken();
+
     if (mounted) {
-      Navigator.pushReplacement(
+      if((accessToken !=null && accessToken.isNotEmpty)&& (refreshToken !=null && refreshToken.isNotEmpty)){
+
+      
+      
+    }else{Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => const MainNavigationScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
         ),
-      );
-    }
+    );}
+  }
   }
 
   @override
