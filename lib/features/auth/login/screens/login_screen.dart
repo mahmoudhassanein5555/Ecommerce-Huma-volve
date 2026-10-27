@@ -1,10 +1,12 @@
-
 import 'package:flutter/material.dart';
 
+import '../../../../core/error/app_exception.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
+import '../../auth_dependencies.dart';
+import '../../domain/usecases/login_use_case.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,11 +20,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
+  late final LoginUseCase _loginUseCase;
+  bool _isLoading = false;
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    _loginUseCase = AuthDependencies.buildLoginUseCase();
 
     super.initState();
   }
@@ -32,6 +37,38 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_isLoading) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _loginUseCase(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+      );
+    } on AppException catch (e) {
+      _showError(e.message);
+    } catch (_) {
+      _showError('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: AppTheme.error),
+      );
   }
 
   @override
@@ -108,15 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 PrimaryButton(
                   text: 'Login',
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => MainNavigationScreen(),
-                        ),
-                      );
-                    }
-                  },
+                  isLoading: _isLoading,
+                  onPressed: _handleLogin,
                 ),
                 const SizedBox(height: 24),
                 Row(
