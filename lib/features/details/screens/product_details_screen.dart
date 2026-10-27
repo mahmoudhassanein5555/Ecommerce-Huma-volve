@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
-import '../widgets/color_selector.dart';
-import '../widgets/size_selector.dart';
+import '../../home/presentation/widgets/color_selector.dart';
+import '../../home/presentation/widgets/size_selector.dart';
 import '../../../core/widgets/primary_button.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  final Product product;
+  final String productId; // تعديل لاستقبال الـ ID بدلاً من الـ Product كامل
 
-  const ProductDetailsScreen({super.key, required this.product});
+  const ProductDetailsScreen({super.key, required this.productId});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  late Product product;
   late Color _selectedColor;
   late String _selectedSize;
 
   @override
   void initState() {
     super.initState();
-    _selectedColor = widget.product.colors.first;
-    _selectedSize = widget.product.sizes.first;
+    // البحث عن المنتج باستخدام الـ ID القادم من الـ Deep Link
+    product = dummyProducts.firstWhere(
+      (p) => p.id.toString() == widget.productId,
+      orElse: () => dummyProducts.first, // قيمة افتراضية لو مش موجود
+    );
+    _selectedColor = product.colors.first;
+    _selectedSize = product.sizes.first;
   }
 
   @override
@@ -62,11 +68,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
-                tag: 'product-${widget.product.id}',
-                child: Image.network(
-                  widget.product.imageUrl,
-                  fit: BoxFit.cover,
-                ),
+                tag: 'product-${product.id}',
+                child: Image.network(product.imageUrl, fit: BoxFit.cover),
               ),
             ),
           ),
@@ -88,20 +91,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.product.name,
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontSize: 28,
-                              height: 1.2,
-                            ),
+                            product.name,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(fontSize: 28, height: 1.2),
                           ),
                         ),
                         const SizedBox(width: 16),
                         Text(
-                          '\$${widget.product.price.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: AppTheme.primary,
-                            fontSize: 24,
-                          ),
+                          '\$${product.price.toStringAsFixed(2)}',
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(color: AppTheme.primary, fontSize: 24),
                         ),
                       ],
                     ),
@@ -114,7 +113,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.product.description,
+                      product.description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         height: 1.6,
                         fontSize: 16,
@@ -129,7 +128,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 12),
                     ColorSelector(
-                      colors: widget.product.colors,
+                      colors: product.colors,
                       selectedColor: _selectedColor,
                       onColorSelected: (color) {
                         setState(() {
@@ -146,7 +145,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 12),
                     SizeSelector(
-                      sizes: widget.product.sizes,
+                      sizes: product.sizes,
                       selectedSize: _selectedSize,
                       onSizeSelected: (size) {
                         setState(() {
@@ -160,7 +159,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${widget.product.name} added to cart'),
+                            content: Text('${product.name} added to cart'),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
