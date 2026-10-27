@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "113843163029",
+    "project_id": "ecommerce-huma-volve-125b9",
+    "storage_bucket": "ecommerce-huma-volve-125b9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:113843163029:android:35a322cbf5c76e35cb709c",
+        "android_client_info": {
+          "package_name": "com.example.ecommerce_app_huma_volve"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVq4llaQOvRX_L2WP9LQPYqz8lsWeMBiA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

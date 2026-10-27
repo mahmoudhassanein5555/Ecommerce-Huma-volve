@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Opening Product...</title>
+
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+      #message { background: white; max-width: 360px; width: 100%; padding: 32px 24px; border-radius: 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #message h2 { color: #039be5; font-weight: bold; font-size: 18px; margin: 0 0 12px; }
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; color: rgba(0,0,0,0.6); }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 14px; border-radius: 4px; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Opening in App...</h2>
+      <p>If the app doesn't open automatically, click the button below.</p>
+      <a id="fallback-link" href="#">Open Product</a>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Extract the product ID from /products/{id}.
+        const match = window.location.pathname.match(/^\/products\/(\d+)\/?$/);
+        const productId = match?.[1];
+        const fallbackButton = document.querySelector('#fallback-link');
+
+        if (productId) {
+          // Keep this URI in sync with the humavolve://app Android intent filter.
+          const appUrl = `humavolve://app/products/${productId}`;
+          fallbackButton.href = appUrl;
+
+          // Try to open the app automatically; the visible link remains available
+          // if the browser blocks this navigation or the app is not installed.
+          window.location.href = appUrl;
+        } else {
+          document.querySelector('h2').textContent = 'Product Not Found';
+          document.querySelector('p').textContent = 'The product link appears to be invalid.';
+          fallbackButton.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/products/**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ecommerce-huma-volve-125b9",
+          "appId": "1:113843163029:android:35a322cbf5c76e35cb709c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ecommerce-huma-volve-125b9",
+          "configurations": {
+            "android": "1:113843163029:android:35a322cbf5c76e35cb709c"
+          }
+        }
+      }
+    }
+  }
+}
