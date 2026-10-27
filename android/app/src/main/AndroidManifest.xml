@@ -24,6 +24,18 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Product deep links: humavolve://products/{id}. Fully
+                 functional as-is, no external setup required. This is a
+                 plain (non-autoVerify) intent filter: Android App Links
+                 over https would additionally need a real, owned domain
+                 hosting a verified assetlinks.json, which is outside this
+                 repository - see the deep-linking feature's final report. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="humavolve" android:host="products"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -25,10 +25,14 @@ class SizeSelector extends StatelessWidget {
             height: 40,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: isSelected ? Theme.of(context).primaryColor : Colors.transparent,
+              color: isSelected
+                  ? Theme.of(context).primaryColor
+                  : Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey.shade300,
               ),
             ),
             child: Text(
