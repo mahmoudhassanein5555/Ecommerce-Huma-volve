@@ -1,3 +1,8 @@
+import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/core/Network/api_clint.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/screens/models/signup_req_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/login/screens/services/signup_service.dart';
+import 'package:ecommerce_app_huma_volve/features/main_navigation/screens/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/custom_text_field.dart';
@@ -14,15 +19,24 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+
   late final TextEditingController nameController;
   late final TextEditingController emailController;
-  late final TextEditingController passwordController;
+  late final   TextEditingController passwordController;
+  bool isLoading = false;
+  late final Apiclient apiclient;
+  late final SignupService signupService;
+  
 
+  
   @override
   void initState() {
     nameController = TextEditingController();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    apiclient = Apiclient();
+    signupService = SignupService(apiclient);
 
     super.initState();
   }
@@ -65,6 +79,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 48),
                 CustomTextField(
+              
                   controller: nameController,
                   hintText: 'Full Name',
                   prefixIcon: Icons.person_outline,
@@ -109,17 +124,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 40),
                 PrimaryButton(
+                  isLoading: isLoading,
                   text: 'Sign Up',
                   onPressed: () async {
                     if (_formKey.currentState?.validate() ?? false) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
+                      try {
+                        setState(() {
+                          isLoading = true;
+                        });
+                         final Response = await signupService.signUp(SignupReqModel(
+                        email: emailController.text,
+                        
+                         name: nameController.text,
+                      password: passwordController.text));
+                      setState(() {
+                          isLoading = false;
+                        });
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("signup succcessful piz login"),
+                      backgroundColor: Colors.green),
+
                       );
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> const MainNavigationScreen(),),);
+
+                     
+                      
+                    }
+                        
+                        on DioException catch (e) {
+                          setState(() {
+                          isLoading = false;
+                        });
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()),backgroundColor: const Color.fromARGB(255, 175, 76, 76)),);
+                     
+                        
+                      }
+                     
                     }
                   },
+                  
                 ),
                 const SizedBox(height: 24),
                 Row(
