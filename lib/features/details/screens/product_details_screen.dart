@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
-import '../../home/services/models/product_model.dart';
+
 import '../../../core/widgets/primary_button.dart';
+import '../../home/domain/entities/product_entity.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  final ProductModel product;
+  final ProductEntity product;
 
   const ProductDetailsScreen({super.key, required this.product});
 
@@ -58,7 +59,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               background: Hero(
                 tag: 'product-${widget.product.id}',
                 child: Image.network(
-                  widget.product.images![0],
+                  widget.product.images[0],
                   fit: BoxFit.cover,
                 ),
               ),
@@ -82,7 +83,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.product.title ?? "Name isn't found",
+                            widget.product.title,
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(fontSize: 28, height: 1.2),
                           ),
@@ -103,7 +104,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.product.description![0],
+                      widget.product.description[0],
                       style: Theme.of(context).textTheme.bodyMedium
                           ?.copyWith(height: 1.6, fontSize: 16),
                     ),
