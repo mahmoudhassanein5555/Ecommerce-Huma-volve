@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/injection_container.dart';
-import '../../auth/presentation/viewmodel/auth_cubit.dart';
+import '../../auth/presentation/view_model/auth_cubit.dart';
 import '../widgets/profile_view.dart';
 
 class ProfileScreen extends StatelessWidget {

@@ -6,7 +6,7 @@ import '../../../../../../core/helper/failure_message_helper.dart';
 import '../../../../../../core/theme.dart';
 import '../../../../../../core/widgets/custom_text_field.dart';
 import '../../../../../../core/widgets/primary_button.dart';
-import '../../../viewmodel/auth_cubit.dart';
+import '../../../view_model/auth_cubit.dart';
 import '../../login/screens/login_screen.dart';
 
 class SignUpView extends StatefulWidget {

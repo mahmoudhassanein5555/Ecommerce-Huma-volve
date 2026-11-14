@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/theme.dart';
-import 'features/auth/presentation/viewmodel/auth_cubit.dart';
+import 'features/auth/presentation/view_model/auth_cubit.dart';
 import 'features/splash/screens/splash_screen.dart';
 
 void main() {

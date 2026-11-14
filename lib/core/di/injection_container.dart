@@ -7,13 +7,13 @@ import '../../features/auth/domain/usecases/has_session_usecase.dart';
 import '../../features/auth/domain/usecases/sign_in_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_usecase.dart';
-import '../../features/auth/presentation/viewmodel/auth_cubit.dart';
+import '../../features/auth/presentation/view_model/auth_cubit.dart';
 import '../../features/home/data/datasources/home_remote_datasource.dart';
 import '../../features/home/data/repository/home_repository_impl.dart';
 import '../../features/home/domain/repository/home_repository.dart';
 import '../../features/home/domain/usecases/get_category_usecase.dart';
 import '../../features/home/domain/usecases/get_product_usecase.dart';
-import '../../features/home/presentation/viewmodel/cubit/home_cubit.dart';
+import '../../features/home/presentation/view_model/cubit/home_cubit.dart';
 import '../network/api_client.dart';
 import '../storage/token_storage.dart';
 

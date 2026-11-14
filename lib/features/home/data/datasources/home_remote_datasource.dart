@@ -5,7 +5,11 @@ import '../models/product_model.dart';
 
 abstract class HomeRemoteDataSource {
   Future<List<CategoryModel>> getCategories();
-  Future<List<ProductModel>> getProducts(int categoryId);
+  Future<List<ProductModel>> getProducts(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  });
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -25,10 +29,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     return category;
   }
 
+  //https://api.escuelajs.co/api/v1/products?limit=10&offset=0
+
   @override
-  Future<List<ProductModel>> getProducts(int categoryId) async {
+  Future<List<ProductModel>> getProducts(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     final response = await _apiClient.dio.get(
       "${ApiEndpoints.categoriesEndpoint}/$categoryId/${ApiEndpoints.productsEndpoint}",
+
+      queryParameters: {"limit": limit, "offset": offset},
     );
 
     final List jsonData = response.data;

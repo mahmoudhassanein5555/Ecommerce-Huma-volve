@@ -8,7 +8,7 @@ import '../../../../../../../core/theme.dart';
 import '../../../../../../../core/widgets/custom_text_field.dart';
 import '../../../../../../../core/widgets/primary_button.dart';
 import '../../../../../../main_navigation/screens/main_navigation_screen.dart';
-import '../../../../viewmodel/auth_cubit.dart';
+import '../../../../view_model/auth_cubit.dart';
 import '../../../sign_up/screens/sign_up_screen.dart';
 
 class LoginView extends StatefulWidget {

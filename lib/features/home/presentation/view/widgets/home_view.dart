@@ -4,13 +4,43 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../../core/dummy_data.dart';
 import '../../../../../core/helper/failure_message_helper.dart';
 import '../../../../../core/theme.dart';
-import '../../viewmodel/cubit/home_cubit.dart';
-import '../../viewmodel/cubit/home_state.dart';
+
+import '../../view_model/cubit/home_cubit.dart';
+
 import 'category_chip.dart';
 import 'product_card.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const new({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late final ScrollController scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController = ScrollController()..addListener(_onListen);
+  }
+
+  void _onListen() {
+    final pixels = scrollController.position.pixels;
+    final max = scrollController.position.maxScrollExtent;
+    final int triggerDistance = 200;
+
+    if (pixels >= max - triggerDistance) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +48,7 @@ class HomeView extends StatelessWidget {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -107,14 +138,15 @@ class HomeView extends StatelessWidget {
                     const SizedBox(height: 32),
                     BlocBuilder<HomeCubit, HomeState>(
                       buildWhen: (previous, current) {
-                        if (current is ProductLoading ||
-                            current is ProductFailure ||
-                            current is ProductSuccess) {
-                          return false;
-                        } else {
+                        if (current is CategoryLoading ||
+                            current is CategorySuccess ||
+                            current is CategoryFailure) {
                           return true;
+                        } else {
+                          return false;
                         }
                       },
+
                       builder: (context, state) {
                         if (state is CategoryLoading) {
                           return Center(
@@ -141,7 +173,7 @@ class HomeView extends StatelessWidget {
                                   isSelected: state.selectedIndex == index,
                                   onTap: () => context
                                       .read<HomeCubit>()
-                                      .loadProductByCID(index),
+                                      .loadProductsByCID(index),
                                 );
                               },
                             ),
@@ -155,6 +187,16 @@ class HomeView extends StatelessWidget {
               ),
             ),
             BlocBuilder<HomeCubit, HomeState>(
+              buildWhen: (previous, current) {
+                if (current is ProductLoading ||
+                    current is ProductSuccess ||
+                    current is ProductFailure ||
+                    current is LoadMoreProductsError) {
+                  return true;
+                } else {
+                  return false;
+                }
+              },
               builder: (context, state) {
                 if (state is ProductLoading) {
                   return SliverFillRemaining(
@@ -170,20 +212,46 @@ class HomeView extends StatelessWidget {
                   );
                 } else if (state is ProductSuccess) {
                   final product = state.products;
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                  return SliverMainAxisGroup(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.7,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            return ProductCard(product: product[index]);
+                          }, childCount: product.length),
+                        ),
+                      ),
+
+                      if (state.isLoadingMore)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                              ),
+                            ),
                           ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: product[index]);
-                      }, childCount: product.length),
-                    ),
+                        )
+                      else if (state is LoadMoreProductsError)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Center(child: Text(state.errorMessage)),
+                          ),
+                        ),
+                    ],
                   );
                 }
                 return const SliverToBoxAdapter(child: SizedBox.shrink());

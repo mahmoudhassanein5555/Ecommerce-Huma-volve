@@ -8,7 +8,11 @@ class GetProductUsecase {
   final HomeRepository _repository;
   GetProductUsecase({required this._repository});
 
-  Future<Either<Failure, List<ProductEntity>>> invoke(int categoryId) {
-    return _repository.getProducts(categoryId);
+  Future<Either<Failure, List<ProductEntity>>> invoke(
+    int categoryId, {
+    required int limit,
+    required int offset,
+  }) {
+    return _repository.getProducts(categoryId, limit: limit, offset: offset);
   }
 }

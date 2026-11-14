@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
 import '../../auth/presentation/view/login/screens/login_screen.dart';
-import '../../auth/presentation/viewmodel/auth_cubit.dart';
+import '../../auth/presentation/view_model/auth_cubit.dart';
 import 'profile_menu_item.dart';
 
 class ProfileView extends StatelessWidget {
